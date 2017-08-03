@@ -52,7 +52,7 @@ enum class Datatype
 
 const char* GetDatatypeName(Datatype type)
 {
-    switch(type) {
+    switch(static_cast<int>(type)) {
 	LRT_RREGISTRY_DATATYPE_NAME(Datatype::VOID,
 				    LRT_RREGISTRY_DATATYPE_VOID)
 	LRT_RREGISTRY_DATATYPE_NAME(Datatype::INT_8,
