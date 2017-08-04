@@ -8,15 +8,18 @@ namespace rregistry {
 class System
 {
   public:
-  enum class Properties
+  enum Properties
   {
+    TemperatureCore,
+
     __COUNT
   };
 
-  static constexpr Datatype
-    Types[static_cast<property_type_t>(Properties::__COUNT) + 1] = {
-      Datatype::VOID// __COUNT
-    };
+  Datatype TypesImpl[(size_t)Properties::__COUNT] = {
+    Datatype::INT_16// TemperatureCore
+  };
+
+  static Datatype* Types;
 };
 }
 }

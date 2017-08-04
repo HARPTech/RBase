@@ -6,7 +6,7 @@
 #define LRT_RREGISTRY_PROPERTY_GET_OVERLOAD(TYPE, INTERNAL, PROPERTY) \
   bool get(TYPE* v)                                                   \
   {                                                                   \
-    if(type == Datatype::INTERNAL) {                                  \
+    if(type == Datatype:: INTERNAL) {                                  \
       *v = value.PROPERTY;                                            \
       return true;                                                    \
     }                                                                 \

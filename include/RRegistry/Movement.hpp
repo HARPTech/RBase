@@ -8,23 +8,28 @@ namespace rregistry {
 class Movement
 {
   public:
-  enum class Properties
+  enum Properties
   {
     Speed,
     TurnAngle,
     TurnLength,
 
+    Direct_X_Axis,
+    Direct_Y_Axis,
+
     __COUNT
   };
 
-  static constexpr Datatype
-    Types[static_cast<property_type_t>(Properties::__COUNT) + 1] = {
-      Datatype::FLOAT, // Movement::Speed
-      Datatype::DOUBLE,// Movement::TurnAngle,
-      Datatype::FLOAT, // Movement::TurnLength
+  Datatype TypesImpl[(size_t)Properties::__COUNT] = {
+    Datatype::FLOAT, // Movement::Speed
+    Datatype::DOUBLE,// Movement::TurnAngle,
+    Datatype::FLOAT, // Movement::TurnLength
 
-      Datatype::VOID// __COUNT
-    };
+    Datatype::INT_32, // Movement::Direct_X_Axis
+    Datatype::INT_32, // Movement::Direct_Y_Axis
+  };
+
+  static Datatype* Types;
 };
 }
 }

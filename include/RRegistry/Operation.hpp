@@ -8,19 +8,26 @@ namespace rregistry {
 class Operation
 {
   public:
-  enum class Properties
+  enum Properties
   {
     ExecuteMovement,
+    Request,
+
+    Request_Category,
+    Request_Property,
 
     __COUNT
   };
 
-  static constexpr Datatype
-    Types[static_cast<property_type_t>(Properties::__COUNT) + 1] = {
-      Datatype::VOID,// Operation::ExecuteMovement
+  Datatype TypesImpl[(size_t)Properties::__COUNT] = {
+    Datatype::VOID,// Operation::ExecuteMovement
+    Datatype::VOID,// Operation::Request
 
-      Datatype::VOID// __COUNT
-    };
+    Datatype::UINT_16,// Operation::Request_Category
+    Datatype::UINT_16,// Operation::Request_Property
+  };
+
+  static Datatype* Types;
 };
 }
 }
