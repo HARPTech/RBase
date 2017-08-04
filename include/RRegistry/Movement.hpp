@@ -3,27 +3,27 @@
 
 #include "Datatype.hpp"
 
-namespace lrt
-{
-namespace rregistry
-{
+namespace lrt {
+namespace rregistry {
 class Movement
 {
-public:
-    enum class Properties {
-	Speed,
-	TurnAngle,
-	TurnLength,
+  public:
+  enum class Properties
+  {
+    Speed,
+    TurnAngle,
+    TurnLength,
 
-	__COUNT
-    };
+    __COUNT
+  };
 
-    Datatype Types[static_cast<property_type_t>(Properties::__COUNT) + 1] = {
-	Datatype::FLOAT,   // Movement::Speed
-	Datatype::DOUBLE,  // Movement::TurnAngle,
-	Datatype::FLOAT,   // Movement::TurnLength
+  static constexpr Datatype
+    Types[static_cast<property_type_t>(Properties::__COUNT) + 1] = {
+      Datatype::FLOAT, // Movement::Speed
+      Datatype::DOUBLE,// Movement::TurnAngle,
+      Datatype::FLOAT, // Movement::TurnLength
 
-	Datatype::VOID     // __COUNT
+      Datatype::VOID// __COUNT
     };
 };
 }
