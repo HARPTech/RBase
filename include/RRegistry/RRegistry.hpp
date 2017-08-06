@@ -40,6 +40,8 @@ GetDatatypeForProperty(category_type_t category, property_type_t property)
       if(property > static_cast<size_t>(Operation::Properties::__COUNT))
         return Datatype::VOID;
       return Operation::Types[property];
+    default:
+      return Datatype::VOID;
   }
   return Datatype::VOID;
 }

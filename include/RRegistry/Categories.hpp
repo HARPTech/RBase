@@ -8,6 +8,8 @@ enum class Categories
   System,
   Movement,
   Operation,
+
+  __COUNT
 };
 }
 }

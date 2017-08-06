@@ -33,7 +33,10 @@ class Property
   LRT_RREGISTRY_PROPERTY_GET_OVERLOAD(float, FLOAT, Float)
   LRT_RREGISTRY_PROPERTY_GET_OVERLOAD(double, DOUBLE, Double)
   LRT_RREGISTRY_PROPERTY_GET_OVERLOAD(bool, BOOLEAN, Bool)
+  LRT_RREGISTRY_PROPERTY_GET_OVERLOAD(char*, STRING, String)
 
+  category_type_t category;
+  property_type_t property;
   property_value_t value;
   Datatype type;
 };

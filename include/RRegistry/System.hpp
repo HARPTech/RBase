@@ -10,13 +10,13 @@ class System
   public:
   enum Properties
   {
-    TemperatureCore,
+    RBreakout_Version,
 
     __COUNT
   };
 
   Datatype TypesImpl[(size_t)Properties::__COUNT] = {
-    Datatype::INT_16// TemperatureCore
+    Datatype::STRING // System::RBreakout_Version
   };
 
   static Datatype* Types;

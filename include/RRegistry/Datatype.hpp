@@ -20,6 +20,7 @@
 #define LRT_RREGISTRY_DATATYPE_FLOAT "Float"
 #define LRT_RREGISTRY_DATATYPE_DOUBLE "Double"
 #define LRT_RREGISTRY_DATATYPE_BOOLEAN "Boolean"
+#define LRT_RREGISTRY_DATATYPE_STRING "String"
 #define LRT_RREGISTRY_DATATYPE___COUNT "[INTERNAL] Counter"
 
 namespace lrt {
@@ -40,6 +41,7 @@ union property_value_t
   float Float;
   double Double;
   bool Bool;
+  char* String;
 };
 
 enum class Datatype
@@ -59,6 +61,8 @@ enum class Datatype
   DOUBLE,
 
   BOOLEAN,
+
+  STRING,
 
   __COUNT
 };
@@ -85,6 +89,9 @@ GetDatatypeName(Datatype type)
 
     LRT_RREGISTRY_DATATYPE_NAME(Datatype::BOOLEAN,
                                 LRT_RREGISTRY_DATATYPE_BOOLEAN)
+
+    LRT_RREGISTRY_DATATYPE_NAME(Datatype::STRING,
+                                LRT_RREGISTRY_DATATYPE_STRING)
 
     LRT_RREGISTRY_DATATYPE_NAME(Datatype::__COUNT,
                                 LRT_RREGISTRY_DATATYPE___COUNT)

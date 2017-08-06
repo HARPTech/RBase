@@ -20,8 +20,8 @@ class Operation
   };
 
   Datatype TypesImpl[(size_t)Properties::__COUNT] = {
-    Datatype::VOID,// Operation::ExecuteMovement
-    Datatype::VOID,// Operation::Request
+    Datatype::INT_8,// Operation::ExecuteMovement
+    Datatype::INT_8,// Operation::Request
 
     Datatype::UINT_16,// Operation::Request_Category
     Datatype::UINT_16,// Operation::Request_Property
