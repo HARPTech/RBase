@@ -8,7 +8,7 @@ root = true
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
-tab_with = 2
+tab_width = 2
 max_line_length = 80
 charset = utf-8
 
