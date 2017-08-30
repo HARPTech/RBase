@@ -4,5 +4,5 @@ using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("lrt::rcomm");
 
 struct Update {
-  name @0 :Text;
+  values @0 :List(import "value.capnp".RegistryValue);
 }

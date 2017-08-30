@@ -15,6 +15,8 @@ struct RegistryValue {
     uint64 @7 : UInt64;
     float @8 : Float32;
     double @9 : Float64;
-    string @10 : Text;
+    bool @10 : Bool;
+    string @11 : Text;
   }
+  property @12 : UInt32;
 }

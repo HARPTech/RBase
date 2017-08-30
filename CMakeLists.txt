@@ -15,5 +15,8 @@ capnp_generate_cpp(SRCS HDRS ${CAPNP_FILES})
 
 add_library(rcomm SHARED ${SRCS} ${HDRS})
 
+target_link_libraries(rcomm PUBLIC ${CAPNP_LIBRARIES})
 target_compile_definitions(rcomm PUBLIC ${CAPNP_DEFINITIONS})
 target_include_directories(rcomm PUBLIC SYSTEM ${CAPNP_INCLUDE_DIRS})
+target_include_directories(rcomm PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/definitions)
+target_include_directories(rcomm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
