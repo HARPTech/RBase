@@ -12,9 +12,9 @@ enum class Int8
 enum class Int16
 {
   MVMT_STEER_DIRECTION = 10, ///< Defines the steering direction of the device.
-                             /// Default is 2^16 / 2 ( = 32768).
+                             /// Default is 2^15 / 2 ( = 16384).
   MVMT_FORWARD_VELOCITY = 11,///< Defines the forward velocity of the main
-                             /// motors. Default is 2^16 / 2 ( = 32768).
+                             /// motors. Default is 2^15 / 2 ( = 16384).
 };
 enum class Int32
 {
@@ -22,16 +22,16 @@ enum class Int32
 enum class Int64
 {
 };
-enum class UInt8
+enum class Uint8
 {
 };
-enum class UInt16
+enum class Uint16
 {
 };
-enum class UInt32
+enum class Uint32
 {
 };
-enum class UInt64
+enum class Uint64
 {
 };
 enum class Float
@@ -40,6 +40,9 @@ enum class Float
                              /// It defines the "responsiveness" of the device.
 };
 enum class Double
+{
+};
+enum class Bool
 {
 };
 enum class String
