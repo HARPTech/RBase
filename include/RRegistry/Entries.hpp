@@ -44,6 +44,7 @@ enum class Double
 };
 enum class Bool
 {
+  TEST_RBREAKOUT_COMMUNICATION = 0,
 };
 enum class String
 {
