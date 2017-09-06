@@ -5,4 +5,5 @@ $Cxx.namespace("lrt::rcomm");
 
 struct Request {
   positions @0 :List(import "position.capnp".RegistryPosition);
+  subscribe @1 : Bool;
 }
