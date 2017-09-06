@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 #ifndef LRT_STRING_TYPE
-#define std ::string
+#include <string>
+#define LRT_STRING_TYPE std ::string
 #endif
 
 namespace lrt {

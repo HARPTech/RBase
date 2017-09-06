@@ -74,10 +74,12 @@ enum class Double
 enum class Bool
 {
   TEST_RBREAKOUT_COMMUNICATION = 0,
+  REDY_RBREAKOUT = 1,
   _COUNT
 };
 enum class String
 {
+  LOG_RBREAKOUT = 0,
   _COUNT
 };
 }
