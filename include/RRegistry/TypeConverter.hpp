@@ -3,19 +3,31 @@
 
 #include "Entries.hpp"
 #include <stdint.h>
-#include <string>
+
+#ifndef LRT_STRING_TYPE
+#define std ::string
+#endif
 
 namespace lrt {
 namespace rregistry {
 template<typename T>
 struct GetValueTypeOfEntryClass;
 
-#define LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Class, Type) \
+template<typename TypeCategory>
+constexpr Type
+GetEnumTypeOfEntryClass(TypeCategory enumType);
+
+#define LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(CLASS, TYPE) \
   template<>                                             \
-  struct GetValueTypeOfEntryClass<Class>                 \
+  struct GetValueTypeOfEntryClass<CLASS>                 \
   {                                                      \
-    typedef Type type;                                   \
-  };
+    typedef TYPE type;                                   \
+  };                                                     \
+  template<>                                             \
+  constexpr Type GetEnumTypeOfEntryClass(CLASS)          \
+  {                                                      \
+    return Type::CLASS;                                  \
+  }
 
 LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int8, int8_t)
 LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int16, int16_t)
@@ -28,7 +40,7 @@ LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint64, uint64_t)
 LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Float, float)
 LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Double, double)
 LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Bool, bool)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, std::string)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, LRT_STRING_TYPE)
 }
 }
 
