@@ -6,7 +6,8 @@
 
 #ifndef LRT_STRING_TYPE
 #include <string>
-#define LRT_STRING_TYPE std ::string
+#define LRT_STRING_TYPE std::string
+#define LRT_STRING_TYPE_STD
 #endif
 
 namespace lrt {
