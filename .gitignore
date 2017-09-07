@@ -45,3 +45,7 @@ flycheck_*.el
 .dir-locals.el
 
 build/
+
+CMakeFiles/
+Makefile
+cmake_install.cmake
