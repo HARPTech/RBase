@@ -117,7 +117,11 @@ LiteCommData::fromType(
   LiteCommData& data,
   typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value)
 {
+#ifdef LRT_STRING_TYPE_STD
   data.Int32 = value.length();
+#else
+  data.Int32 = strlen(value);
+#endif
 }
 
 enum class LiteCommType
