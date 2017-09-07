@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <RRegistry/TypeConverter.hpp>
+
 namespace lrt {
 namespace rcomm {
 
@@ -83,7 +85,40 @@ union LiteCommData
   double Double;
 
   bool Bool;
+
+  template<typename TypeCategory>
+  inline static void fromType(LiteCommData& data, TypeCategory value);
 };
+
+#define LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(TYPE)                          \
+  template<>                                                                   \
+  inline void LiteCommData::fromType(                                          \
+    LiteCommData& data,                                                        \
+    typename rregistry::GetValueTypeOfEntryClass<rregistry::TYPE>::type value) \
+  {                                                                            \
+    data.TYPE = value;                                                         \
+  }
+
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int8)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int16)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int32)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int64)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint8)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint16)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint32)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint64)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Float)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Double)
+LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Bool)
+
+template<>
+inline void
+LiteCommData::fromType(
+  LiteCommData& data,
+  typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value)
+{
+  data.Int32 = value.length();
+}
 
 enum class LiteCommType
 {
