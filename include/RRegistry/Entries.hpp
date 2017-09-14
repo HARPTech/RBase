@@ -20,7 +20,8 @@ enum class Type
   Float,
   Double,
   Bool,
-  String
+  String,
+  _COUNT
 };
 
 typedef uint32_t EntryID;
@@ -32,9 +33,7 @@ enum class Int8
 enum class Int16
 {
   MVMT_STEER_DIRECTION = 0, ///< Defines the steering direction of the device.
-                             /// Default is 2^15 / 2 ( = 16384).
   MVMT_FORWARD_VELOCITY = 1,///< Defines the forward velocity of the main
-                             /// motors. Default is 2^15 / 2 ( = 16384).
   _COUNT
 };
 enum class Int32
@@ -75,11 +74,14 @@ enum class Bool
 {
   TEST_RBREAKOUT_COMMUNICATION = 0,
   REDY_RBREAKOUT = 1,
+
+  COMM_CONNECT = 2,
+  COMM_DISCONNECT = 3,
+
   _COUNT
 };
 enum class String
 {
-  LOG_RBREAKOUT = 0,
   _COUNT
 };
 }
