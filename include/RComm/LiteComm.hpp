@@ -2,6 +2,7 @@
 #define LRT_RCOMM_LITECOMM_HPP
 
 #include <stdint.h>
+#include <string.h>
 
 #include <RRegistry/TypeConverter.hpp>
 
