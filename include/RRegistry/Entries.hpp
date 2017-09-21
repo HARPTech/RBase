@@ -32,8 +32,8 @@ enum class Int8
 };
 enum class Int16
 {
-  MVMT_STEER_DIRECTION = 0, ///< Defines the steering direction of the device.
-  MVMT_FORWARD_VELOCITY = 1,///< Defines the forward velocity of the main
+  MVMT_STEER_DIRECTION = 0,
+  MVMT_FORWARD_VELOCITY = 1,
   _COUNT
 };
 enum class Int32
