@@ -378,7 +378,7 @@ int32_t static GetValueOfName(Type type, const char* name)
   case Type::CLASS:                                   \
     return CLASS##Detail[property].name;
 
-constexpr const char*
+const char*
 GetNameOfEntryClass(Type type, uint32_t property)
 {
   switch(type) {

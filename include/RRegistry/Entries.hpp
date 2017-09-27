@@ -32,8 +32,8 @@ enum class Int8
 };
 enum class Int16
 {
-  MVMT_STEER_DIRECTION = 0, ///< Defines the steering direction of the device.
-  MVMT_FORWARD_VELOCITY = 1,///< Defines the forward velocity of the main
+  MVMT_STEER_DIRECTION = 0,
+  MVMT_FORWARD_VELOCITY = 1,
   MVMT_MOTOR_PWM_FL = 2,
   MVMT_MOTOR_PWM_FR = 3,
   MVMT_MOTOR_PWM_RL = 4,
@@ -102,9 +102,8 @@ enum class Bool
 {
   TEST_RBREAKOUT_COMMUNICATION = 0,
   REDY_RBREAKOUT = 1,
-  //is it important that the following items are on that position? If so, where to put MVMT_PARKBREAK?
-  COMM_CONNECT = 2,
-  COMM_DISCONNECT = 3,
+
+  MVMT_PARKBREAK = 2,
 
   _COUNT
 };
