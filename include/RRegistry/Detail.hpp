@@ -116,11 +116,206 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Int8) = {};
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Int16) = {
   { "MVMT_STEER_DIRECTION", "Direct steering direction.", 0, -32767, 32767 },
   { "MVMT_FORWARD_VELOCITY", "Direct movement velocity.", 0, -32767, 32767 },
+  { "MVMT_MOTOR_PWM_FL",
+    "Feedback value of RBreakout\n\n This gives the operator a detailed "
+    "feedback about the arduino-calculated desired march speed. Note: A value "
+    "of -255 does NOT correspond with a pwm-value of 255, as the signal levels "
+    "in reverse-direction-mode have to be reversed as the other side of the "
+    "complementary halfbridge is now conducting.",
+    0,
+    -255,
+    255 },
+  { "MVMT_MOTOR_PWM_FR",
+    "Feedback value of RBreakout\n\n This gives the operator a detailed "
+    "feedback about the arduino-calculated desired march speed. Note: A value "
+    "of -255 does NOT correspond with a pwm-value of 255, as the signal levels "
+    "in reverse-direction-mode have to be reversed as the other side of the "
+    "complementary halfbridge is now conducting.",
+    0,
+    -255,
+    255 },
+  { "MVMT_MOTOR_PWM_RL",
+    "Feedback value of RBreakout\n\n This gives the operator a detailed "
+    "feedback about the arduino-calculated desired march speed. Note: A value "
+    "of -255 does NOT correspond with a pwm-value of 255, as the signal levels "
+    "in reverse-direction-mode have to be reversed as the other side of the "
+    "complementary halfbridge is now conducting.",
+    0,
+    -255,
+    255 },
+  { "MVMT_MOTOR_PWM_RR",
+    "Feedback value of RBreakout\n\n This gives the operator a detailed "
+    "feedback about the arduino-calculated desired march speed. Note: A value "
+    "of -255 does NOT correspond with a pwm-value of 255, as the signal levels "
+    "in reverse-direction-mode have to be reversed as the other side of the "
+    "complementary halfbridge is now conducting.",
+    0,
+    -255,
+    255 },
 };
-LRT_RREGISTRY_ENTRYDETAIL_ARR(Int32) = {};
+LRT_RREGISTRY_ENTRYDETAIL_ARR(Int32) = {
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_FL_X",
+    "Position of Servo, (top) X-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and in main moving direction, unit mm.",
+    350,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_FL_Y",
+    "Position of Servo, (top) Y-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and +90° to main moving direction, "
+    "unit mm.",
+    300,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_FR_X",
+    "Position of Servo, (top) X-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and in main moving direction, unit mm.",
+    350,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_FR_Y",
+    "Position of Servo, (top) Y-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and +90° to main moving direction, "
+    "unit mm.",
+    300,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_RL_X",
+    "Position of Servo, (top) X-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and in main moving direction, unit mm.",
+    350,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_RL_Y",
+    "Position of Servo, (top) Y-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and +90° to main moving direction, "
+    "unit mm.",
+    300,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_RR_X",
+    "Position of Servo, (top) X-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and in main moving direction, unit mm.",
+    350,
+    1,
+    5000 },
+  { "GEOM_DISTANCE_ANGLE_POINT_CENTER_RR_Y",
+    "Position of Servo, (top) Y-Component\n\nDistance between rover center and "
+    "servo drive side axis in flat view and +90° to main moving direction, "
+    "unit mm.",
+    300,
+    1,
+    5000 },
+};
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Int64) = {};
-LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint8) = {};
-LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint16) = {};
+LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint8) = {
+  { "MVMT_MOTOR_FL_CURRENT",
+    "Measured Voltage above sensFET current shunt FL.",
+    0,
+    0,
+    255 },
+  { "MVMT_MOTOR_FR_CURRENT",
+    "Measured Voltage above sensFET current shunt FR.",
+    0,
+    0,
+    255 },
+  { "MVMT_MOTOR_RL_CURRENT",
+    "Measured Voltage above sensFET current shunt RL.",
+    0,
+    0,
+    255 },
+  { "MVMT_MOTOR_RR_CURRENT",
+    "Measured Voltage above sensFET current shunt RR.",
+    0,
+    0,
+    255 },
+  { "MVMT_SERVO_FL_POSITION",
+    "PWM command for Servo control\n\nValue zero "
+    "corresponds to 1ms of pulse width, moving servo "
+    "to position 0°, whereas a value of 255 moves to "
+    "servo maximum angle.",
+    128,
+    0,
+    255 },
+  { "MVMT_SERVO_FR_POSITION",
+    "PWM command for Servo control\n\nValue zero "
+    "corresponds to 1ms of pulse width, moving servo "
+    "to position 0°, whereas a value of 255 moves to "
+    "servo maximum angle.",
+    128,
+    0,
+    255 },
+  { "MVMT_SERVO_RL_POSITION",
+    "PWM command for Servo control\n\nValue zero "
+    "corresponds to 1ms of pulse width, moving servo "
+    "to position 0°, whereas a value of 255 moves to "
+    "servo maximum angle.",
+    128,
+    0,
+    255 },
+  { "MVMT_SERVO_RR_POSITION",
+    "PWM command for Servo control\n\nValue zero "
+    "corresponds to 1ms of pulse width, moving servo "
+    "to position 0°, whereas a value of 255 moves to "
+    "servo maximum angle.",
+    128,
+    0,
+    255 },
+};
+LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint16) = {
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FL",
+    "Ratio current through main Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FR",
+    "Ratio current through main Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_RL",
+    "Ratio current through main Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_RR",
+    "Ratio current through main Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FL_AUX",
+    "Ratio current through auxiliary Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup. There may "
+    "not be a butterworth filtering element",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FR_AUX",
+    "Ratio current through auxiliary Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup. There may "
+    "not be a butterworth filtering element",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_RL_AUX",
+    "Ratio current through auxiliary Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup. There may "
+    "not be a butterworth filtering element",
+    138,
+    0,
+    65535 },
+  { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_RR_AUX",
+    "Ratio current through auxiliary Highside-FET to ADC-Voltage\n\nThis is a "
+    "constant value, yet it has to be calibrated at first startup. There may "
+    "not be a butterworth filtering element",
+    138,
+    0,
+    65535 }
+};
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint32) = {};
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint64) = {};
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Float) = {
@@ -137,7 +332,14 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Bool) = {
     "Mark RBreakout as ready, should be received from RBreakout.",
     false,
     false,
-    true }
+    true },
+  { "MVMT_PARKBREAK",
+    "Parkbreak status\n\nTrue means that all halfbridges "
+    "short to ground, generating a low-impedance eddy "
+    "current break.",
+    false,
+    false,
+    true },
 };
 static constexpr EntryDetailLite
   StringDetail[static_cast<size_t>(String::_COUNT)] = {
