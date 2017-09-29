@@ -82,17 +82,17 @@ LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, LRT_STRING_TYPE)
   }
 
 #define LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(CPP_FUNC) \
-  CPP_FUNC(Int8)                                   \
-  CPP_FUNC(Int16)                                  \
-  CPP_FUNC(Int32)                                  \
-  CPP_FUNC(Int64)                                  \
-  CPP_FUNC(Uint8)                                  \
-  CPP_FUNC(Uint16)                                 \
-  CPP_FUNC(Uint32)                                 \
-  CPP_FUNC(Uint64)                                 \
-  CPP_FUNC(Float)                                  \
-  CPP_FUNC(Double)                                 \
-  CPP_FUNC(Bool)                                   \
+  CPP_FUNC(Int8)                                                  \
+  CPP_FUNC(Int16)                                                 \
+  CPP_FUNC(Int32)                                                 \
+  CPP_FUNC(Int64)                                                 \
+  CPP_FUNC(Uint8)                                                 \
+  CPP_FUNC(Uint16)                                                \
+  CPP_FUNC(Uint32)                                                \
+  CPP_FUNC(Uint64)                                                \
+  CPP_FUNC(Float)                                                 \
+  CPP_FUNC(Double)                                                \
+  CPP_FUNC(Bool)                                                  \
   CPP_FUNC(String)
 
 #define LRT_RREGISTRY_CPPTYPELIST_HELPER(CPP_FUNC) \
@@ -107,6 +107,22 @@ LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, LRT_STRING_TYPE)
   CPP_FUNC(Float)                                  \
   CPP_FUNC(Double)                                 \
   CPP_FUNC(Bool)
+
+#define LRT_RREGISTRY_GETENTRYCOUNT_CASE(CLASS) \
+  case Type::CLASS:                             \
+    return static_cast<size_t>(CLASS::_COUNT);  \
+    break;
+
+constexpr size_t
+GetEntryCount(Type type)
+{
+  switch(type) {
+    LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+      LRT_RREGISTRY_GETENTRYCOUNT_CASE)
+    default:
+      return 0;
+  }
+}
 }
 }
 
