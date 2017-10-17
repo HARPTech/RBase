@@ -125,6 +125,25 @@ LiteCommData::fromType(
 #endif
 }
 
+#define LRT_RCOMM_SETLITECOMMDATATOREGISTRY_HELPER(CLASS)               \
+  case rregistry::Type::CLASS:                                          \
+    registry->set(static_cast<rregistry::CLASS>(property), data.CLASS); \
+    break;
+
+template<class Registry>
+inline void
+SetLiteCommDataToRegistry(rregistry::Type type,
+                          uint32_t property,
+                          const LiteCommData& data,
+                          Registry registry)
+{
+  switch(type) {
+    LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RCOMM_SETLITECOMMDATATOREGISTRY_HELPER)
+    default:
+      break;
+  }
+}
+
 enum class LiteCommType
 {
   Update,
