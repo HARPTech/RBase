@@ -18,10 +18,7 @@ InitSubscriptionMap()
   std::unique_ptr<SubscriptionMap> subscriptions =
     std::make_unique<SubscriptionMap>();
   for(std::size_t i = 0; i < subscriptions->size(); ++i) {
-    (*subscriptions)[i].resize(GetEntryCount(static_cast<Type>(i)));
-    for(std::size_t n = 0; i < (*subscriptions)[i].size(); ++n) {
-      (*subscriptions)[i][n] = false;
-    }
+    (*subscriptions)[i].assign(GetEntryCount(static_cast<Type>(i)), false);
   }
   return subscriptions;
 }
