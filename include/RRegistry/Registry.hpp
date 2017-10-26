@@ -3,6 +3,7 @@
 
 #include "Detail.hpp"
 #include "Entries.hpp"
+#include "RegistryReceiver.hpp"
 #include "TypeConverter.hpp"
 #include <RComm/LiteCommAdapter.hpp>
 #include <algorithm>
@@ -26,6 +27,10 @@ class Registry
 
   using Adapter = rcomm::LiteCommAdapter<Registry>;
   using AdapterPtr = std::shared_ptr<Adapter>;
+
+  // The receivers are a collection of raw pointers to make easy registering
+  // easier to do. For example in class constructors and destructors.
+  using ReceiverPtr = RegistryReceiver*;
 
   void initDefaults()
   {
@@ -53,6 +58,9 @@ class Registry
     setToArray(property, value);
     for(auto adapter : m_adapters)
       adapter->set(property, value);
+    for(auto receiver : m_receivers)
+      receiver->onUpdate(GetEnumTypeOfEntryClass(property),
+                         static_cast<uint32_t>(property));
   }
 
   template<class TypeCategory>
@@ -67,9 +75,25 @@ class Registry
   {
     std::remove(m_adapters.begin(), m_adapters.end(), adapter);
   }
+  void removeAdapter(Adapter* adapter)
+  {
+    std::remove_if(m_adapters.begin(),
+                   m_adapters.end(),
+                   [adapter](AdapterPtr ptr) { return ptr.get() == adapter; });
+  }
+
+  void addReceiver(ReceiverPtr receiver) { m_receivers.push_back(receiver); }
+  void removeReceiver(ReceiverPtr receiver)
+  {
+    std::remove(m_receivers.begin(), m_receivers.end(), receiver);
+  }
+
+  const std::vector<AdapterPtr>& adapters() { return m_adapters; }
+  const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
   private:
   std::vector<AdapterPtr> m_adapters;
+  std::vector<ReceiverPtr> m_receivers;
 
   template<typename TypeCategory>
   using ValueArray =
