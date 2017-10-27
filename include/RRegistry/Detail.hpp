@@ -479,17 +479,18 @@ GetEntryDetail(TypeCategory property);
 
 LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RREGISTRY_GETENTRYDETAIL_SPECIAL)
 
-constexpr std::size_t GetFullEntryCount()
+constexpr std::size_t
+GetFullEntryCount()
 {
   std::size_t total = 0;
-  for(std::size_t i = 0; i < static_cast<std::size_t>(Type::_COUNT); ++i)
-  {
+  for(std::size_t i = 0; i < static_cast<std::size_t>(Type::_COUNT); ++i) {
     total += GetEntryCount(static_cast<Type>(i));
   }
   return total;
 }
 
-inline Type GetTypeFromContinousNumber(int i)
+inline Type
+GetTypeFromContinousNumber(int i)
 {
   std::size_t type = 0;
   while(i >= 0) {
@@ -499,7 +500,10 @@ inline Type GetTypeFromContinousNumber(int i)
   }
   return static_cast<Type>(type);
 }
-inline std::size_t NormalizeContinousNumber(int i)
+
+
+inline std::size_t
+NormalizeContinousNumber(int i)
 {
   std::size_t type = static_cast<std::size_t>(GetTypeFromContinousNumber(i));
   for(std::size_t n = 0; n < type; ++n) {
@@ -508,6 +512,15 @@ inline std::size_t NormalizeContinousNumber(int i)
   return i;
 }
 
+inline std::size_t
+GetContinuousNumberFromPropertyType(Type type, uint32_t property)
+{
+  std::size_t i = 0;
+  while(property != NormalizeContinousNumber(i) && type != GetTypeFromContinousNumber(i)) {
+    ++i;
+  }
+  return i;
+}
 }
 }
 
