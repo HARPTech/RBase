@@ -13,12 +13,12 @@ using SubscriptionMap =
   std::array<std::vector<bool>, static_cast<std::size_t>(Type::_COUNT)>;
 
 inline std::unique_ptr<SubscriptionMap>
-InitSubscriptionMap()
+InitSubscriptionMap(bool subscribed = false)
 {
   std::unique_ptr<SubscriptionMap> subscriptions =
     std::make_unique<SubscriptionMap>();
   for(std::size_t i = 0; i < subscriptions->size(); ++i) {
-    (*subscriptions)[i].assign(GetEntryCount(static_cast<Type>(i)), false);
+    (*subscriptions)[i].assign(GetEntryCount(static_cast<Type>(i)), subscribed);
   }
   return subscriptions;
 }
