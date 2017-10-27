@@ -159,11 +159,17 @@ class LiteCommAdapter
   inline void subscribe(TypeCategory property)
   {
     sendRequestSubscribeUpdate(property, rcomm::LiteCommType::Subscribe);
+    (*m_subscriptionsRemote)[static_cast<std::size_t>(
+      rregistry::GetEnumTypeOfEntryClass(property))]
+                            [static_cast<std::size_t>(property)] = true;
   }
   template<typename TypeCategory>
   inline void unsubscribe(TypeCategory property)
   {
     sendRequestSubscribeUpdate(property, rcomm::LiteCommType::Unsubscribe);
+    (*m_subscriptionsRemote)[static_cast<std::size_t>(
+      rregistry::GetEnumTypeOfEntryClass(property))]
+                            [static_cast<std::size_t>(property)] = false;
   }
 
   template<typename TypeCategory>
@@ -172,6 +178,13 @@ class LiteCommAdapter
     return (*m_subscriptions)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                              [static_cast<uint32_t>(property)];
+  }
+  template<typename TypeCategory>
+  bool isSubscribedTo(TypeCategory property)
+  {
+    return (*m_subscriptionsRemote)[static_cast<std::size_t>(
+      rregistry::GetEnumTypeOfEntryClass(property))]
+                                   [static_cast<uint32_t>(property)];
   }
 
   void parseMessage(const Message& msg)
@@ -225,6 +238,8 @@ class LiteCommAdapter
   bool m_acceptProperty = true;
 
   std::unique_ptr<rregistry::SubscriptionMap> m_subscriptions;
+  std::unique_ptr<rregistry::SubscriptionMap> m_subscriptionsRemote =
+    rregistry::InitSubscriptionMap(false);
 };
 }
 }
