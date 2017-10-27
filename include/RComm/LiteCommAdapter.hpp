@@ -34,7 +34,7 @@ class LiteCommAdapter
   {
     static const std::size_t maxLength = 14;
 
-    using Buffer = std::array<uint8_t, maxLength>;
+    using Buffer = std::array<char, maxLength>;
 
     Buffer buf;
 
@@ -43,12 +43,15 @@ class LiteCommAdapter
      *
      * The type is the first byte of the message casted to rcomm::LiteCommType.
      */
-    inline LiteCommType lType() { return static_cast<LiteCommType>(buf[0]); }
+    inline LiteCommType lType() const
+    {
+      return static_cast<LiteCommType>(buf[0]);
+    }
 
     /**
      * @brief Returns the length of this message based on its type.
      */
-    inline std::size_t length()
+    inline std::size_t length() const
     {
       switch(lType()) {
         case LiteCommType::Update:
@@ -63,14 +66,16 @@ class LiteCommAdapter
     /**
      * @brief Returns the remaining byte count for this message, based its type.
      */
-    inline std::size_t remainingBytes(const typename Buffer::iterator it)
+    inline std::size_t remainingBytes(const typename Buffer::iterator it) const
     {
       return (buf.begin() + length()) - it;
     }
   };
 
-  LiteCommAdapter(std::shared_ptr<RegistryClass> registry)
+  LiteCommAdapter(std::shared_ptr<RegistryClass> registry,
+                  bool subscribed = false)
     : m_registry(registry)
+    , m_subscriptions(rregistry::InitSubscriptionMap(subscribed))
   {}
   ~LiteCommAdapter() {}
 
@@ -161,6 +166,14 @@ class LiteCommAdapter
     sendRequestSubscribeUpdate(property, rcomm::LiteCommType::Unsubscribe);
   }
 
+  template<typename TypeCategory>
+  bool isSubscribed(TypeCategory property)
+  {
+    return (*m_subscriptions)[static_cast<std::size_t>(
+      rregistry::GetEnumTypeOfEntryClass(property))]
+                             [static_cast<uint32_t>(property)];
+  }
+
   void parseMessage(const Message& msg)
   {
     using namespace rcomm;
@@ -209,11 +222,9 @@ class LiteCommAdapter
   protected:
   std::shared_ptr<RegistryClass> m_registry;
 
-  private:
   bool m_acceptProperty = true;
 
-  std::unique_ptr<rregistry::SubscriptionMap> m_subscriptions =
-    rregistry::InitSubscriptionMap();
+  std::unique_ptr<rregistry::SubscriptionMap> m_subscriptions;
 };
 }
 }
