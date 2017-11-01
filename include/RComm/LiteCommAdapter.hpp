@@ -119,10 +119,23 @@ class LiteCommAdapter
     auto it = message.buf.begin();
     (*it++) = static_cast<char>(lType);
     (*it++) = static_cast<char>(type);
-    for(size_t i = 0; i < 4; ++i)
+    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
       (*it++) = lProp.byte[i];
-    for(size_t i = 0; i < 8; ++i)
+    for(size_t i = 0; i < sizeof(LiteCommData); ++i)
       (*it++) = lData.byte[i];
+
+    // Check if the message is a string and handle the string uniquely.
+    if(type == rregistry::Type::String) {
+      LiteCommData data;
+      for(int32_t i = 0; i < lData.Int32; ++i) {
+        data.byte[i % sizeof(LiteCommData)] = value[i];
+        if(i > 0 && i % sizeof(LiteCommData) == 0) {
+          append(property, data);
+          // Reset data.
+          for(std::size_t n = 0; n < sizeof(LiteCommData); ++n) data.byte[n] = 0;
+        }
+      }
+    }
 
     send(message);
   }
@@ -144,7 +157,7 @@ class LiteCommAdapter
     auto it = message.buf.begin();
     (*it++) = static_cast<char>(lType);
     (*it++) = static_cast<char>(type);
-    for(size_t i = 0; i < 4; ++i)
+    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
       (*it++) = lProp.byte[i];
 
     send(message);
@@ -185,6 +198,35 @@ class LiteCommAdapter
     return (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                                    [static_cast<uint32_t>(property)];
+  }
+  template<typename TypeCategory>
+  inline void append(TypeCategory property, const LiteCommData& data)
+  {
+    using namespace rcomm;
+
+    Message message;
+
+    LiteCommType lType = LiteCommType::Append;
+    rregistry::Type type = GetEnumTypeOfEntryClass(property);
+    LiteCommProp lProp;
+    LiteCommData lData;
+
+    lProp.property = static_cast<uint32_t>(property);
+
+    // Copy into the message.
+    auto it = message.buf.begin();
+    (*it++) = static_cast<char>(lType);
+    (*it++) = static_cast<char>(type);
+    for(size_t i = 0; i < 4; ++i)
+      (*it++) = lProp.byte[i];
+
+    // Write the data to be appended.
+    for(size_t i = 0; i < sizeof(LiteCommData); ++i)
+      (*it++) = data.byte[i];
+    for(size_t i = 0; i < sizeof(LiteCommData); ++i)
+      (*it++) = lData.byte[i];
+
+    send(message);
   }
 
   void parseMessage(const Message& msg)

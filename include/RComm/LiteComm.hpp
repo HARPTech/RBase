@@ -71,7 +71,7 @@ namespace rcomm {
  */
 union LiteCommData
 {
-  char byte[8];
+  char byte[8] = {0};
   int8_t Int8;
   int16_t Int16;
   int32_t Int32;
@@ -150,6 +150,7 @@ enum class LiteCommType
   Request,
   Subscribe,
   Unsubscribe,
+  Append,
 };
 
 union LiteCommProp
