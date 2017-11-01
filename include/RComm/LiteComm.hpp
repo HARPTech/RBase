@@ -71,7 +71,7 @@ namespace rcomm {
  */
 union LiteCommData
 {
-  char byte[8] = {0};
+  char byte[8] = { 0 };
   int8_t Int8;
   int16_t Int16;
   int32_t Int32;
@@ -88,41 +88,66 @@ union LiteCommData
   bool Bool;
 
   template<typename TypeCategory>
-  inline static void fromType(LiteCommData& data, TypeCategory value);
+  inline static void fromType(LiteCommData& data,
+                              TypeCategory value,
+                              std::size_t&& i = 0);
+
+#define LRT_RCOMM_LITECOMMDATA_FROMREGISTRYENTRY_CASE(TYPE)             \
+  case rregistry::Type::TYPE:                                           \
+    fromType(data, registry->get(static_cast<rregistry::TYPE>(entry))); \
+    break;
+
+  template<typename Registry>
+  inline static void fromRegistryEntry(LiteCommData& data,
+                                       rregistry::Type type,
+                                       uint32_t entry,
+                                       Registry registry)
+  {
+    switch(type) {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+        LRT_RCOMM_LITECOMMDATA_FROMREGISTRYENTRY_CASE)
+      default:
+        break;
+    }
+  }
 };
 
 #define LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(TYPE)                          \
   template<>                                                                   \
   inline void LiteCommData::fromType(                                          \
     LiteCommData& data,                                                        \
-    typename rregistry::GetValueTypeOfEntryClass<rregistry::TYPE>::type value) \
+    typename rregistry::GetValueTypeOfEntryClass<rregistry::TYPE>::type value, \
+    std::size_t&& i)                                                           \
   {                                                                            \
     data.TYPE = value;                                                         \
   }
 
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int8)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int16)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int32)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Int64)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint8)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint16)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint32)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Uint64)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Float)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Double)
-LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL(Bool)
+LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RCOMM_LITECOMMDATA_FROMTYPE_SPECIAL)
 
 template<>
 inline void
 LiteCommData::fromType(
   LiteCommData& data,
-  typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value)
+  typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value,
+  std::size_t&& i)
 {
+  std::size_t strlength = 0;
 #ifdef LRT_STRING_TYPE_STD
-  data.Int32 = value.length();
+  strlength = value.length();
 #else
-  data.Int32 = strlen(value);
+  strlength = strlen(value);
 #endif
+  if(i == 0) {
+    data.Int32 = strlength;
+  } else {
+    // The string should be written directly into the binary blob.
+    // The (i - 1) is needed, because i = 0 stands for the size of the string to
+    // be written into data.Int32.
+    for(; (i - 1) < strlength &&
+          (i - 1) % sizeof(LiteCommData) < sizeof(LiteCommData);
+        ++i)
+      data.byte[(i - 1) % sizeof(LiteCommData)] = value[(i - 1)];
+  }
 }
 
 #define LRT_RCOMM_SETLITECOMMDATATOREGISTRY_HELPER(CLASS)               \
@@ -139,6 +164,22 @@ SetLiteCommDataToRegistry(rregistry::Type type,
 {
   switch(type) {
     LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RCOMM_SETLITECOMMDATATOREGISTRY_HELPER)
+    case rregistry::Type::String:
+      // This only gets called on the first run and does not append data. This
+      // is why the string type is only its length in Int32.
+      {
+        auto str =
+          registry->getPtrFromArray(static_cast<rregistry::String>(property));
+
+#ifdef LRT_STRING_TYPE_STD
+        str->assign(data.Int32, '\0');
+#else
+        if(str != nullptr)
+          std::free(str);
+        str = std::calloc(data.Int32, char);
+#endif
+      }
+      break;
     default:
       break;
   }

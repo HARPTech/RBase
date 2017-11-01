@@ -4,6 +4,7 @@
 #include <RComm/LiteComm.hpp>
 #include <RRegistry/SubscriptionMap.hpp>
 #include <RRegistry/TypeConverter.hpp>
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <memory>
@@ -55,6 +56,7 @@ class LiteCommAdapter
     {
       switch(lType()) {
         case LiteCommType::Update:
+        case LiteCommType::Append:
           return 14;
         case LiteCommType::Request:
         case LiteCommType::Subscribe:
@@ -64,7 +66,14 @@ class LiteCommAdapter
     }
 
     /**
-     * @brief Returns the remaining byte count for this message, based its type.
+     * @brief Returns the practical begin of the internal buffer, after the
+     * LiteCommType declaration.
+     */
+    inline auto begin() const { return buf.begin() + 1; }
+
+    /**
+     * @brief Returns the remaining byte count for this message, based its
+     * type.
      */
     inline std::size_t remainingBytes(const typename Buffer::iterator it) const
     {
@@ -127,13 +136,16 @@ class LiteCommAdapter
     // Check if the message is a string and handle the string uniquely.
     if(type == rregistry::Type::String) {
       LiteCommData data;
-      for(int32_t i = 0; i < lData.Int32; ++i) {
-        data.byte[i % sizeof(LiteCommData)] = value[i];
-        if(i > 0 && i % sizeof(LiteCommData) == 0) {
-          append(property, data);
-          // Reset data.
-          for(std::size_t n = 0; n < sizeof(LiteCommData); ++n) data.byte[n] = 0;
-        }
+      for(int32_t i = 1; i < lData.Int32 + 1; ++i) {
+        // The fromType iterates i up to the point it needs to run again,
+        // because internally it copies as much as possible from the string into
+        // the byte[] buffer of data. After each run, the resulting data should
+        // be sent as an LiteCommType::Append message.
+        LiteCommData::fromType(data, value, i);
+        append(property, data);
+        // Reset data.
+        for(std::size_t n = 0; n < sizeof(LiteCommData); ++n)
+          data.byte[n] = 0;
       }
     }
 
@@ -223,8 +235,6 @@ class LiteCommAdapter
     // Write the data to be appended.
     for(size_t i = 0; i < sizeof(LiteCommData); ++i)
       (*it++) = data.byte[i];
-    for(size_t i = 0; i < sizeof(LiteCommData); ++i)
-      (*it++) = lData.byte[i];
 
     send(message);
   }
@@ -232,10 +242,8 @@ class LiteCommAdapter
   void parseMessage(const Message& msg)
   {
     using namespace rcomm;
-    // Start after the type.
-    auto it = msg.buf.begin();
+    auto it = msg.begin();
 
-    LiteCommType lType = static_cast<LiteCommType>(*it++);
     rregistry::Type type = static_cast<rregistry::Type>(*it++);
     LiteCommProp lProp;
     LiteCommData lData;
@@ -243,25 +251,35 @@ class LiteCommAdapter
     for(size_t i = 0; i < 4; ++i)
       lProp.byte[i] = (*it++);
 
-    switch(lType) {
+    switch(msg.lType()) {
       case LiteCommType::Update:
         for(size_t i = 0; i < 8; ++i)
           lData.byte[i] = (*it++);
 
         m_acceptProperty = false;
-        switch(type) {
-          LRT_RREGISTRY_CPPTYPELIST_HELPER(
-            LRT_RCOMM_LITECOMMADAPTER_PARSEMESSAGE_SET_CASE)
-          case rregistry::Type::String:
-            break;
-          default:
-            break;
-        }
+        SetLiteCommDataToRegistry(type, lProp.property, lData, m_registry);
         m_acceptProperty = true;
 
         break;
+      case LiteCommType::Append:
+        // Currently, only rregistry::String needs to be appended because of the
+        // varying length. This is why only the rregistry::Type::String case is
+        // handled in this case.
+        if(type == rregistry::Type::String) {
+          auto str = m_registry->getPtrFromArray(
+            static_cast<rregistry::String>(lProp.property));
+#ifdef LRT_STRING_TYPE_STD
+          auto it = std::find(str->begin(), str->end(), '\0');
+          std::copy(lData.byte, lData.byte + sizeof(lData), it);
+#else
+          auto it = std::find(str[0], str[std::strlen(str)], '\0')
+            std::copy(lData.byte[0], lData.byte[sizeof(lData)], it);
+#endif
+        }
+        break;
       case LiteCommType::Request:
-        SetLiteCommDataToRegistry(type, lProp.property, lData, m_registry);
+        LRT_RREGISTRY_TYPETOTEMPLATEFUNCHELPER(
+          type, lProp.property, setBack, this);
         break;
       case LiteCommType::Subscribe:
         (*m_subscriptions)[static_cast<std::size_t>(type)][lProp.property] =
@@ -275,6 +293,12 @@ class LiteCommAdapter
   }
 
   protected:
+  template<class TypeCategory>
+  void setBack(TypeCategory property, LiteCommAdapter* self = nullptr)
+  {
+    set(property, m_registry->get(property));
+  }
+
   std::shared_ptr<RegistryClass> m_registry;
 
   bool m_acceptProperty = true;
