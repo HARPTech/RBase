@@ -22,6 +22,7 @@ namespace rregistry {
 class Registry
 {
   public:
+  friend class rcomm::LiteCommAdapter<Registry>;
   Registry() { initDefaults(); }
   ~Registry() {}
 
@@ -91,15 +92,19 @@ class Registry
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
-  private:
-  std::vector<AdapterPtr> m_adapters;
-  std::vector<ReceiverPtr> m_receivers;
-
   template<typename TypeCategory>
   using ValueArray =
     std::array<typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type,
                rregistry::GetEntryCount(rregistry::GetEnumTypeOfEntryClass(
                  static_cast<TypeCategory>(0)))>;
+
+  template<typename TypeCategory>
+  inline auto getPtrFromArray(TypeCategory property) ->
+    typename GetValueTypeOfEntryClass<TypeCategory>::type*;
+
+  private:
+  std::vector<AdapterPtr> m_adapters;
+  std::vector<ReceiverPtr> m_receivers;
 
 #define LRT_RREGISTRY_REGISTRY_MEMBER_HELPER(CLASS) \
   Registry::ValueArray<CLASS> m_##CLASS##Array;
@@ -130,6 +135,12 @@ class Registry
     ->typename rregistry::GetValueTypeOfEntryClass<CLASS>::type      \
   {                                                                  \
     return m_##CLASS##Array[static_cast<std::size_t>(property)];     \
+  }                                                                  \
+  template<>                                                         \
+  inline auto Registry::getPtrFromArray(CLASS property)              \
+    ->typename rregistry::GetValueTypeOfEntryClass<CLASS>::type*     \
+  {                                                                  \
+    return &m_##CLASS##Array[static_cast<std::size_t>(property)];    \
   }
 
 LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
