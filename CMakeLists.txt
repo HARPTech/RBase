@@ -6,3 +6,7 @@ project(RRegistry
 set(RRegistry_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     PARENT_SCOPE)
+
+set(RRegistry_TEST_DIR
+    ${CMAKE_CURRENT_SOURCE_DIR}/test
+    PARENT_SCOPE)
