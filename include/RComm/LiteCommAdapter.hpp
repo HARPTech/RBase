@@ -75,7 +75,8 @@ class LiteCommAdapter
      * @brief Returns the remaining byte count for this message, based its
      * type.
      */
-    inline std::size_t remainingBytes(const typename Buffer::iterator it) const
+    inline std::size_t remainingBytes(
+      const typename Buffer::const_iterator it) const
     {
       return (buf.begin() + length()) - it;
     }
@@ -133,23 +134,25 @@ class LiteCommAdapter
     for(size_t i = 0; i < sizeof(LiteCommData); ++i)
       (*it++) = lData.byte[i];
 
+    send(message);
+
     // Check if the message is a string and handle the string uniquely.
     if(type == rregistry::Type::String) {
-      LiteCommData data;
-      for(int32_t i = 1; i < lData.Int32 + 1; ++i) {
+      std::size_t stringLength = lData.Int32;
+      for(std::size_t i = 0; i < stringLength; i += sizeof(LiteCommData)) {
         // The fromType iterates i up to the point it needs to run again,
         // because internally it copies as much as possible from the string into
         // the byte[] buffer of data. After each run, the resulting data should
         // be sent as an LiteCommType::Append message.
-        LiteCommData::fromType(data, value, i);
-        append(property, data);
-        // Reset data.
+
+        LiteCommData::fromType(lData, value, i + 1);
+
+        append(property, lData);
+
         for(std::size_t n = 0; n < sizeof(LiteCommData); ++n)
-          data.byte[n] = 0;
+          lData.byte[n] = '\n';
       }
     }
-
-    send(message);
   }
 
   template<typename TypeCategory>
@@ -221,7 +224,6 @@ class LiteCommAdapter
     LiteCommType lType = LiteCommType::Append;
     rregistry::Type type = GetEnumTypeOfEntryClass(property);
     LiteCommProp lProp;
-    LiteCommData lData;
 
     lProp.property = static_cast<uint32_t>(property);
 
@@ -265,12 +267,16 @@ class LiteCommAdapter
         // Currently, only rregistry::String needs to be appended because of the
         // varying length. This is why only the rregistry::Type::String case is
         // handled in this case.
+        for(size_t i = 0; i < 8; ++i)
+          lData.byte[i] = (*it++);
+
         if(type == rregistry::Type::String) {
           auto str = m_registry->getPtrFromArray(
             static_cast<rregistry::String>(lProp.property));
 #ifdef LRT_STRING_TYPE_STD
-          auto it = std::find(str->begin(), str->end(), '\0');
-          std::copy(lData.byte, lData.byte + sizeof(lData), it);
+          std::size_t it = str->find('\0');
+          for(std::size_t i = 0; i < sizeof(LiteCommData); ++i, ++it)
+            (*str)[it] = lData.byte[i];
 #else
           auto it = std::find(str[0], str[std::strlen(str)], '\0')
             std::copy(lData.byte[0], lData.byte[sizeof(lData)], it);

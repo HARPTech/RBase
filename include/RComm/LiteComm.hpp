@@ -143,10 +143,8 @@ LiteCommData::fromType(
     // The string should be written directly into the binary blob.
     // The (i - 1) is needed, because i = 0 stands for the size of the string to
     // be written into data.Int32.
-    for(; (i - 1) < strlength &&
-          (i - 1) % sizeof(LiteCommData) < sizeof(LiteCommData);
-        ++i)
-      data.byte[(i - 1) % sizeof(LiteCommData)] = value[(i - 1)];
+    for(std::size_t n = 0; n < sizeof(LiteCommData); ++n, ++i)
+      data.byte[n] = value[(i - 1)];
   }
 }
 
