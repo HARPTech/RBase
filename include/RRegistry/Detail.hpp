@@ -389,7 +389,9 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Bool) = {
 };
 static constexpr EntryDetailLite
   StringDetail[static_cast<size_t>(String::_COUNT)] = {
-
+    { "VERS_ARDUINO_PROG",
+      "Arduino version (Git Hash)",
+      "The Git hash of the installed version on the Arduino." }
   };
 
 #define LRT_RREGISTRY_NAMECONVERTER_GENERATOR(CLASS)                 \
@@ -501,7 +503,6 @@ GetTypeFromContinousNumber(int i)
   return static_cast<Type>(type);
 }
 
-
 inline std::size_t
 NormalizeContinousNumber(int i)
 {
@@ -516,7 +517,8 @@ inline std::size_t
 GetContinuousNumberFromPropertyType(Type type, uint32_t property)
 {
   std::size_t i = 0;
-  while(property != NormalizeContinousNumber(i) && type != GetTypeFromContinousNumber(i)) {
+  while(property != NormalizeContinousNumber(i) &&
+        type != GetTypeFromContinousNumber(i)) {
     ++i;
   }
   return i;

@@ -109,6 +109,7 @@ enum class Bool
 };
 enum class String
 {
+  VERS_ARDUINO_PROG,
   _COUNT
 };
 }
