@@ -10,3 +10,13 @@ set(RRegistry_INCLUDE_DIRS
 set(RRegistry_TEST_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/test
     PARENT_SCOPE)
+
+add_library(rregistry INTERFACE)
+target_compile_definitions(rregistry
+    INTERFACE LIBRARY_HEADER_ONLY
+)
+
+# Needed because of cross references to the communication protocols with the adapter class.
+target_link_libraries(rregistry INTERFACE rcomm)
+
+target_include_directories(rregistry INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

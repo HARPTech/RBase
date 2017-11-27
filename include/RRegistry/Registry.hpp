@@ -51,10 +51,10 @@ class Registry
     }
   }
 
-  template<class TypeCategory>
-  inline void set(
-    TypeCategory property,
-    typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value)
+  template<class TypeCategory,
+           typename ValueType =
+             typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
+  inline void set(TypeCategory property, ValueType value)
   {
     setToArray(property, value);
     for(auto adapter : m_adapters)
@@ -64,9 +64,10 @@ class Registry
                          static_cast<uint32_t>(property));
   }
 
-  template<class TypeCategory>
-  inline auto get(TypeCategory property) ->
-    typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type
+  template<class TypeCategory,
+           typename ValueType =
+             typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
+  inline ValueType get(TypeCategory property)
   {
     return getFromArray(property);
   }
@@ -92,15 +93,20 @@ class Registry
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
+// The following declaration is not supported by swig and therefore it is
+// commented out in the swig source generation. It is not important though,
+// because the external API does not need this bit.
+#ifndef SWIG
   template<typename TypeCategory>
   using ValueArray =
     std::array<typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type,
                rregistry::GetEntryCount(rregistry::GetEnumTypeOfEntryClass(
                  static_cast<TypeCategory>(0)))>;
+#endif
 
   template<typename TypeCategory>
-  inline auto getPtrFromArray(TypeCategory property) ->
-    typename GetValueTypeOfEntryClass<TypeCategory>::type*;
+  inline typename GetValueTypeOfEntryClass<TypeCategory>::type* getPtrFromArray(
+    TypeCategory property);
 
   private:
   std::vector<AdapterPtr> m_adapters;
@@ -118,8 +124,8 @@ class Registry
     typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value);
 
   template<typename TypeCategory>
-  inline auto getFromArray(TypeCategory property) ->
-    typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type;
+  inline typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type
+  getFromArray(TypeCategory property);
 };
 
 #define LRT_RREGISTRY_REGISTRY_GETARRAYFORTYPE_HELPER(CLASS)         \
@@ -131,14 +137,14 @@ class Registry
     m_##CLASS##Array[static_cast<std::size_t>(property)] = value;    \
   }                                                                  \
   template<>                                                         \
-  inline auto Registry::getFromArray(CLASS property)                 \
-    ->typename rregistry::GetValueTypeOfEntryClass<CLASS>::type      \
+  inline typename rregistry::GetValueTypeOfEntryClass<CLASS>::type   \
+  Registry::getFromArray(CLASS property)                             \
   {                                                                  \
     return m_##CLASS##Array[static_cast<std::size_t>(property)];     \
   }                                                                  \
   template<>                                                         \
-  inline auto Registry::getPtrFromArray(CLASS property)              \
-    ->typename rregistry::GetValueTypeOfEntryClass<CLASS>::type*     \
+  inline typename rregistry::GetValueTypeOfEntryClass<CLASS>::type*  \
+  Registry::getPtrFromArray(CLASS property)                          \
   {                                                                  \
     return &m_##CLASS##Array[static_cast<std::size_t>(property)];    \
   }
