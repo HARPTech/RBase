@@ -13,10 +13,13 @@
 
 %include "stdint.i"
 %include "numpy.i"
+%include "std_shared_ptr.i"
 
 %init %{
     import_array();
 %}
+
+%shared_ptr(rregistry::Registry)
 
 %numpy_typemaps(unsigned char, NPY_UNSIGNED_CHAR, int)
 %numpy_typemaps(signed char, NPY_SIGNED_CHAR, int)

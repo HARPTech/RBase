@@ -67,9 +67,23 @@ class Registry
   template<class TypeCategory,
            typename ValueType =
              typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
+  inline void setIntProperty(int32_t intProperty, ValueType value) {
+    set(static_cast<TypeCategory>(intProperty), value);
+  }
+
+  template<class TypeCategory,
+           typename ValueType =
+             typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
   inline ValueType get(TypeCategory property)
   {
     return getFromArray(property);
+  }
+
+  template<class TypeCategory,
+           typename ValueType =
+             typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
+  inline ValueType getIntProperty(int32_t intProperty) {
+    return get(static_cast<TypeCategory>(intProperty));
   }
 
   void registerAdapter(AdapterPtr adapter) { m_adapters.push_back(adapter); }
