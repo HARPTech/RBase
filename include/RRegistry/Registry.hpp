@@ -13,10 +13,10 @@
 namespace lrt {
 namespace rregistry {
 
-#define LRT_RREGISTRY_REGISTRY_INITDEFAULTS_HELPER(CLASS)  \
-  case Type::CLASS:                                        \
-    set(static_cast<CLASS>(property),                      \
-        CLASS##Detail[static_cast<size_t>(property)].def); \
+#define LRT_RREGISTRY_REGISTRY_INITDEFAULTS_HELPER(CLASS)    \
+  case Type::CLASS:                                          \
+    set(static_cast<CLASS>(property),                        \
+        CLASS##Detail[static_cast<uint16_t>(property)].def); \
     break;
 
 class Registry
@@ -61,13 +61,14 @@ class Registry
       adapter->set(property, value);
     for(auto receiver : m_receivers)
       receiver->onUpdate(GetEnumTypeOfEntryClass(property),
-                         static_cast<uint32_t>(property));
+                         static_cast<uint16_t>(property));
   }
 
   template<class TypeCategory,
            typename ValueType =
              typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
-  inline void setIntProperty(int32_t intProperty, ValueType value) {
+  inline void setIntProperty(int32_t intProperty, ValueType value)
+  {
     set(static_cast<TypeCategory>(intProperty), value);
   }
 
@@ -82,7 +83,8 @@ class Registry
   template<class TypeCategory,
            typename ValueType =
              typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
-  inline ValueType getIntProperty(int32_t intProperty) {
+  inline ValueType getIntProperty(int32_t intProperty)
+  {
     return get(static_cast<TypeCategory>(intProperty));
   }
 
@@ -148,19 +150,19 @@ class Registry
     CLASS property,                                                  \
     typename rregistry::GetValueTypeOfEntryClass<CLASS>::type value) \
   {                                                                  \
-    m_##CLASS##Array[static_cast<std::size_t>(property)] = value;    \
+    m_##CLASS##Array[static_cast<uint16_t>(property)] = value;       \
   }                                                                  \
   template<>                                                         \
-  inline typename rregistry::GetValueTypeOfEntryClass<CLASS>::type   \
-  Registry::getFromArray(CLASS property)                             \
+  inline auto Registry::getFromArray(CLASS property)                 \
+    ->typename rregistry::GetValueTypeOfEntryClass<CLASS>::type      \
   {                                                                  \
-    return m_##CLASS##Array[static_cast<std::size_t>(property)];     \
+    return m_##CLASS##Array[static_cast<uint16_t>(property)];        \
   }                                                                  \
   template<>                                                         \
-  inline typename rregistry::GetValueTypeOfEntryClass<CLASS>::type*  \
-  Registry::getPtrFromArray(CLASS property)                          \
+  inline auto Registry::getPtrFromArray(CLASS property)              \
+    ->typename rregistry::GetValueTypeOfEntryClass<CLASS>::type*     \
   {                                                                  \
-    return &m_##CLASS##Array[static_cast<std::size_t>(property)];    \
+    return &m_##CLASS##Array[static_cast<uint16_t>(property)];       \
   }
 
 LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
