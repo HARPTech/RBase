@@ -190,12 +190,14 @@ enum class LiteCommType
   Subscribe,
   Unsubscribe,
   Append,
+
+  _COUNT
 };
 
 union LiteCommProp
 {
-  uint32_t property;
-  char byte[sizeof(property)];
+  uint16_t property;
+  uint8_t byte[sizeof(property)];
 };
 }
 }

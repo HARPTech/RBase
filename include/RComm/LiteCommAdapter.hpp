@@ -33,9 +33,9 @@ class LiteCommAdapter
    */
   struct Message
   {
-    static const std::size_t maxLength = 14;
+    static const std::size_t maxLength = 12;
 
-    using Buffer = std::array<char, maxLength>;
+    using Buffer = std::array<uint8_t, maxLength>;
 
     Buffer buf;
 
@@ -57,11 +57,11 @@ class LiteCommAdapter
       switch(lType()) {
         case LiteCommType::Update:
         case LiteCommType::Append:
-          return 14;
+          return sizeof(LiteCommType) + sizeof(LiteCommProp) + sizeof(LiteCommData) + 1;
         case LiteCommType::Request:
         case LiteCommType::Subscribe:
         case LiteCommType::Unsubscribe:
-          return 6;
+          return sizeof(LiteCommType) + sizeof(LiteCommProp) + 1;
       }
     }
 
@@ -122,13 +122,13 @@ class LiteCommAdapter
     LiteCommProp lProp;
     LiteCommData lData;
 
-    lProp.property = static_cast<uint32_t>(property);
+    lProp.property = static_cast<typeof(LiteCommProp::property)>(property);
     LiteCommData::fromType(lData, value);
 
     // Copy into the message.
     auto it = message.buf.begin();
-    (*it++) = static_cast<char>(lType);
-    (*it++) = static_cast<char>(type);
+    (*it++) = static_cast<uint8_t>(lType);
+    (*it++) = static_cast<uint8_t>(type);
     for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
       (*it++) = lProp.byte[i];
     for(size_t i = 0; i < sizeof(LiteCommData); ++i)
@@ -166,12 +166,12 @@ class LiteCommAdapter
     rregistry::Type type = GetEnumTypeOfEntryClass(property);
     LiteCommProp lProp;
 
-    lProp.property = static_cast<uint32_t>(property);
+    lProp.property = static_cast<typeof(LiteCommProp::property)>(property);
 
     // Copy into the message.
     auto it = message.buf.begin();
-    (*it++) = static_cast<char>(lType);
-    (*it++) = static_cast<char>(type);
+    (*it++) = static_cast<uint8_t>(lType);
+    (*it++) = static_cast<uint8_t>(type);
     for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
       (*it++) = lProp.byte[i];
 
@@ -225,13 +225,13 @@ class LiteCommAdapter
     rregistry::Type type = GetEnumTypeOfEntryClass(property);
     LiteCommProp lProp;
 
-    lProp.property = static_cast<uint32_t>(property);
+    lProp.property = static_cast<typeof(LiteCommProp::property)>(property);
 
     // Copy into the message.
     auto it = message.buf.begin();
-    (*it++) = static_cast<char>(lType);
-    (*it++) = static_cast<char>(type);
-    for(size_t i = 0; i < 4; ++i)
+    (*it++) = static_cast<uint8_t>(lType);
+    (*it++) = static_cast<uint8_t>(type);
+    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
       (*it++) = lProp.byte[i];
 
     // Write the data to be appended.
@@ -247,15 +247,21 @@ class LiteCommAdapter
     auto it = msg.begin();
 
     rregistry::Type type = static_cast<rregistry::Type>(*it++);
+    if(type >= rregistry::Type::_COUNT)
+      return;
+
     LiteCommProp lProp;
     LiteCommData lData;
 
-    for(size_t i = 0; i < 4; ++i)
+    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
       lProp.byte[i] = (*it++);
+
+    if(lProp.property >= rregistry::GetEntryCount(type))
+      return;
 
     switch(msg.lType()) {
       case LiteCommType::Update:
-        for(size_t i = 0; i < 8; ++i)
+        for(size_t i = 0; i < sizeof(LiteCommData); ++i)
           lData.byte[i] = (*it++);
 
         m_acceptProperty = false;
@@ -295,6 +301,9 @@ class LiteCommAdapter
         (*m_subscriptions)[static_cast<std::size_t>(type)][lProp.property] =
           false;
         break;
+      default:
+        // Type not supported or invalid.
+        return;
     }
   }
 
