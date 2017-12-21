@@ -71,7 +71,7 @@ namespace rcomm {
  */
 union LiteCommData
 {
-  char byte[8] = { 0 };
+  uint8_t byte[8] = { 0 };
   int8_t Int8;
   int16_t Int16;
   int32_t Int32;
@@ -90,7 +90,7 @@ union LiteCommData
   template<typename TypeCategory>
   inline static void fromType(LiteCommData& data,
                               TypeCategory value,
-                              std::size_t&& i = 0);
+                              size_t&& i = 0);
 
 #define LRT_RCOMM_LITECOMMDATA_FROMREGISTRYENTRY_CASE(TYPE)             \
   case rregistry::Type::TYPE:                                           \
@@ -117,7 +117,7 @@ union LiteCommData
   inline void LiteCommData::fromType(                                          \
     LiteCommData& data,                                                        \
     typename rregistry::GetValueTypeOfEntryClass<rregistry::TYPE>::type value, \
-    std::size_t&& i)                                                           \
+    size_t&& i)                                                                \
   {                                                                            \
     data.TYPE = value;                                                         \
   }
@@ -129,9 +129,9 @@ inline void
 LiteCommData::fromType(
   LiteCommData& data,
   typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value,
-  std::size_t&& i)
+  size_t&& i)
 {
-  std::size_t strlength = 0;
+  size_t strlength = 0;
 #ifdef LRT_STRING_TYPE_STD
   strlength = value.length();
 #else
@@ -143,7 +143,7 @@ LiteCommData::fromType(
     // The string should be written directly into the binary blob.
     // The (i - 1) is needed, because i = 0 stands for the size of the string to
     // be written into data.Int32.
-    for(std::size_t n = 0; n < sizeof(LiteCommData); ++n, ++i)
+    for(size_t n = 0; n < 8; ++n, ++i)
       data.byte[n] = value[(i - 1)];
   }
 }
@@ -197,7 +197,7 @@ enum class LiteCommType
 union LiteCommProp
 {
   uint16_t property;
-  uint8_t byte[sizeof(property)];
+  uint8_t byte[2];
 };
 }
 }

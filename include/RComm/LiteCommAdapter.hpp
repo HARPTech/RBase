@@ -57,11 +57,11 @@ class LiteCommAdapter
       switch(lType()) {
         case LiteCommType::Update:
         case LiteCommType::Append:
-          return sizeof(LiteCommType) + sizeof(LiteCommProp) + sizeof(LiteCommData) + 1;
+          return 12;
         case LiteCommType::Request:
         case LiteCommType::Subscribe:
         case LiteCommType::Unsubscribe:
-          return sizeof(LiteCommType) + sizeof(LiteCommProp) + 1;
+          return 4;
       }
     }
 
@@ -122,16 +122,16 @@ class LiteCommAdapter
     LiteCommProp lProp;
     LiteCommData lData;
 
-    lProp.property = static_cast<typeof(LiteCommProp::property)>(property);
+    lProp.property = static_cast<uint16_t>(property);
     LiteCommData::fromType(lData, value);
 
     // Copy into the message.
     auto it = message.buf.begin();
     (*it++) = static_cast<uint8_t>(lType);
     (*it++) = static_cast<uint8_t>(type);
-    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
+    for(size_t i = 0; i < 2; ++i)
       (*it++) = lProp.byte[i];
-    for(size_t i = 0; i < sizeof(LiteCommData); ++i)
+    for(size_t i = 0; i < 8; ++i)
       (*it++) = lData.byte[i];
 
     send(message);
@@ -139,7 +139,7 @@ class LiteCommAdapter
     // Check if the message is a string and handle the string uniquely.
     if(type == rregistry::Type::String) {
       std::size_t stringLength = lData.Int32;
-      for(std::size_t i = 0; i < stringLength; i += sizeof(LiteCommData)) {
+      for(std::size_t i = 0; i < stringLength; i += 8) {
         // The fromType iterates i up to the point it needs to run again,
         // because internally it copies as much as possible from the string into
         // the byte[] buffer of data. After each run, the resulting data should
@@ -172,7 +172,7 @@ class LiteCommAdapter
     auto it = message.buf.begin();
     (*it++) = static_cast<uint8_t>(lType);
     (*it++) = static_cast<uint8_t>(type);
-    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
+    for(size_t i = 0; i < 2; ++i)
       (*it++) = lProp.byte[i];
 
     send(message);
@@ -231,11 +231,11 @@ class LiteCommAdapter
     auto it = message.buf.begin();
     (*it++) = static_cast<uint8_t>(lType);
     (*it++) = static_cast<uint8_t>(type);
-    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
+    for(size_t i = 0; i < 2; ++i)
       (*it++) = lProp.byte[i];
 
     // Write the data to be appended.
-    for(size_t i = 0; i < sizeof(LiteCommData); ++i)
+    for(size_t i = 0; i < 8; ++i)
       (*it++) = data.byte[i];
 
     send(message);
@@ -253,7 +253,7 @@ class LiteCommAdapter
     LiteCommProp lProp;
     LiteCommData lData;
 
-    for(size_t i = 0; i < sizeof(LiteCommProp); ++i)
+    for(size_t i = 0; i < 2; ++i)
       lProp.byte[i] = (*it++);
 
     if(lProp.property >= rregistry::GetEntryCount(type))
@@ -261,7 +261,7 @@ class LiteCommAdapter
 
     switch(msg.lType()) {
       case LiteCommType::Update:
-        for(size_t i = 0; i < sizeof(LiteCommData); ++i)
+        for(size_t i = 0; i < 8; ++i)
           lData.byte[i] = (*it++);
 
         m_acceptProperty = false;
@@ -281,7 +281,7 @@ class LiteCommAdapter
             static_cast<rregistry::String>(lProp.property));
 #ifdef LRT_STRING_TYPE_STD
           std::size_t it = str->find('\0');
-          for(std::size_t i = 0; i < sizeof(LiteCommData); ++i, ++it)
+          for(std::size_t i = 0; i < 8; ++i, ++it)
             (*str)[it] = lData.byte[i];
 #else
           auto it = std::find(str[0], str[std::strlen(str)], '\0')
