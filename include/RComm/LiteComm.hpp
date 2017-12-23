@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <RRegistry/TypeConverter.hpp>
 
@@ -173,8 +174,8 @@ SetLiteCommDataToRegistry(rregistry::Type type,
         str->assign(data.Int32, '\0');
 #else
         if(str != nullptr)
-          std::free(str);
-        str = std::calloc(data.Int32, char);
+          free(str);
+        str = calloc(data.Int32, sizeof(uint8_t));
 #endif
       }
       break;
