@@ -93,13 +93,13 @@ inline void
 SetRegistryPosition(rcomm::RegistryPosition::Builder& container,
                     TypeCategory property);
 
-#define LRT_RREGISTRY_VALUEADAPTER_POSITION(CLASS)                           \
-  template<>                                                                 \
-  inline void SetRegistryPosition(                                           \
-    rcomm::RegistryPosition::Builder& container, rregistry::CLASS property) \
-  {                                                                          \
-    container.getType().set##CLASS();                                        \
-    container.setProperty(static_cast<uint32_t>(property));                  \
+#define LRT_RREGISTRY_VALUEADAPTER_POSITION(CLASS)                             \
+  template<>                                                                   \
+  inline void SetRegistryPosition(rcomm::RegistryPosition::Builder& container, \
+                                  rregistry::CLASS property)                   \
+  {                                                                            \
+    container.getType().set##CLASS();                                          \
+    container.setProperty(static_cast<uint32_t>(property));                    \
   }
 
 LRT_RREGISTRY_VALUEADAPTER_POSITION(Int8)

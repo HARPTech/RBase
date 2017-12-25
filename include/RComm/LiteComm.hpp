@@ -2,8 +2,8 @@
 #define LRT_RCOMM_LITECOMM_HPP
 
 #include <stdint.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <RRegistry/TypeConverter.hpp>
 
@@ -58,6 +58,18 @@ namespace rcomm {
  * | 0-1|lrt::rcomm::LiteCommType|Transmission Type = LiteCommType::Subscribe|
  * | 1-2 | lrt::rregistry::Type         | The registry type. |
  * | 2-6 | LiteCommProp | The property to subscribe to.                   |
+ *
+ * \subsection transmission_type_debug Debug
+ *
+ * This type serves to enable debugging support of GET and SET requests in the
+ * registry. It is built like the following:
+ *
+ * | Byte-Number | Datatype | Purpose |
+ * |-------------|----------|---------|
+ * | 0-1 | lrt::rcomm::LiteCommType|Transmission Type = LiteCommType::Debug|
+ * | 1-2 | lrt::rregistry::Type | The registry type. |
+ * | 2-4 | LiteCommProp | The property affected. |
+ * | 4-8 | LiteCommDebugPos | The debug position. |
  *
  * \subsection transmission_type_unsibscribe  Unsibscribe
  *
@@ -191,6 +203,7 @@ enum class LiteCommType
   Subscribe,
   Unsubscribe,
   Append,
+  Debug,
 
   _COUNT
 };
@@ -200,6 +213,13 @@ union LiteCommProp
   uint16_t property;
   uint8_t byte[2];
 };
+
+union LiteCommDebugPos
+{
+  uint32_t pos;
+  uint8_t byte[4];
+};
+
 }
 }
 
