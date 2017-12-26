@@ -208,6 +208,27 @@ enum class LiteCommType
   _COUNT
 };
 
+constexpr const char*
+GetNameOfLiteCommType(LiteCommType type)
+{
+  switch(type) {
+    case LiteCommType::Update:
+      return "Update";
+    case LiteCommType::Request:
+      return "Request";
+    case LiteCommType::Subscribe:
+      return "Subscribe";
+    case LiteCommType::Unsubscribe:
+      return "Unsubscribe";
+    case LiteCommType::Append:
+      return "Append";
+    case LiteCommType::Debug:
+      return "Debug";
+    default:
+      return "Unknown";
+  }
+}
+
 union LiteCommProp
 {
   uint16_t property;
@@ -219,7 +240,6 @@ union LiteCommDebugPos
   uint32_t pos;
   uint8_t byte[4];
 };
-
 }
 }
 

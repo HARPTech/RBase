@@ -2,6 +2,7 @@
 #define LRT_RCOMM_LITECOMMADAPTER_HPP
 
 #include <RComm/LiteComm.hpp>
+#include <RRegistry/DebuggingDataStore.hpp>
 #include <RRegistry/SubscriptionMap.hpp>
 #include <RRegistry/TypeConverter.hpp>
 #include <algorithm>
@@ -62,6 +63,8 @@ class LiteCommAdapter
         case LiteCommType::Subscribe:
         case LiteCommType::Unsubscribe:
           return 4;
+        case LiteCommType::Debug:
+          return 8;
       }
     }
 
@@ -82,10 +85,34 @@ class LiteCommAdapter
     }
   };
 
-  LiteCommAdapter(std::shared_ptr<RegistryClass> registry,
-                  bool subscribed = false)
+  /**
+   * @brief Defines the internal debug mode of the adapter.
+   *
+   * The debug mode is the current state of receiving LiteCommType::Debug
+   * messages containing data useful for debugging the entire system and the
+   * decisions made by it. It is the current state of the internal
+   * debugging-related state machine, so to speak.
+   */
+  enum DebugMode
+  {
+    WaitingForSet,
+    SetReceived,
+    _COUNT
+  };
+
+  using MsgCallback = void (*)(const char*,
+                               LiteCommType lType,
+                               rregistry::Type,
+                               uint16_t property);
+
+  LiteCommAdapter(
+    std::shared_ptr<RegistryClass> registry,
+    bool subscribed = false,
+    std::shared_ptr<rregistry::DebuggingDataStore> debuggingDataStore = nullptr,
+    const char* adapterName = "Unnamed Adapter")
     : m_registry(registry)
     , m_subscriptions(rregistry::InitSubscriptionMap(subscribed))
+    , m_adapterName(adapterName)
   {}
   ~LiteCommAdapter() {}
 
@@ -250,8 +277,9 @@ class LiteCommAdapter
     if(type >= rregistry::Type::_COUNT)
       return;
 
-    LiteCommProp lProp;
-    LiteCommData lData;
+    thread_local LiteCommProp lProp;
+    thread_local LiteCommData lData;
+    thread_local LiteCommDebugPos lDebugPos;
 
     for(size_t i = 0; i < 2; ++i)
       lProp.byte[i] = (*it++);
@@ -268,6 +296,9 @@ class LiteCommAdapter
         SetLiteCommDataToRegistry(type, lProp.property, lData, m_registry);
         m_acceptProperty = true;
 
+        // There was a set (= update), so the internal debugging state has to be
+        // updated to reflect this change.
+        m_debugState = DebugMode::SetReceived;
         break;
       case LiteCommType::Append:
         // Currently, only rregistry::String needs to be appended because of the
@@ -301,10 +332,52 @@ class LiteCommAdapter
         (*m_subscriptions)[static_cast<std::size_t>(type)][lProp.property] =
           false;
         break;
+      case LiteCommType::Debug:
+        if(m_debuggingDataStore) {
+          // Read the debugging data, which is an int32 value with 4 byte
+          // length.
+          for(size_t i = 0; i < 4; ++i)
+            lDebugPos.byte[i] = (*it++);
+
+          switch(m_debugState) {
+            case DebugMode::WaitingForSet:
+              // The received event must be a Get-notification, because no Set
+              // has been issued.
+              m_debuggingDataStore->getOp(
+                m_adapterName, type, lProp.property, lDebugPos.pos);
+              break;
+            case DebugMode::SetReceived:
+              // The received event must be a Set-notification, because the last
+              // received update was a set too. After this notification, the
+              // internal state will immediately be switched to
+              // DebugMode::WaitingForSet again to process any following
+              // Get-notifications.
+              m_debugState = DebugMode::WaitingForSet;
+
+              m_debuggingDataStore->setOp(
+                m_adapterName, type, lProp.property, lData, lDebugPos.pos);
+              break;
+          }
+        }
+        break;
       default:
         // Type not supported or invalid.
         return;
     }
+    callMessageCallback(msg.lType(), type, lProp.property);
+  }
+
+  void setMessageCallback(LiteCommType type, MsgCallback cb)
+  {
+    m_messageCallback[static_cast<size_t>(type)] = cb;
+  }
+  inline void callMessageCallback(LiteCommType lType,
+                                  rregistry::Type type,
+                                  uint16_t property)
+  {
+    auto cb = m_messageCallback[static_cast<size_t>(lType)];
+    if(cb)
+      cb(m_adapterName, lType, type, property);
   }
 
   protected:
@@ -315,12 +388,22 @@ class LiteCommAdapter
   }
 
   std::shared_ptr<RegistryClass> m_registry;
+  std::shared_ptr<rregistry::DebuggingDataStore> m_debuggingDataStore;
 
   bool m_acceptProperty = true;
+  const char* m_adapterName;
 
   std::unique_ptr<rregistry::SubscriptionMap> m_subscriptions;
   std::unique_ptr<rregistry::SubscriptionMap> m_subscriptionsRemote =
     rregistry::InitSubscriptionMap(false);
+
+  DebugMode m_debugState = DebugMode::WaitingForSet;
+  rregistry::Type m_lastSetType;
+  uint16_t m_lastSetProperty;
+
+  MsgCallback m_messageCallback[static_cast<size_t>(LiteCommType::_COUNT)] = {
+    nullptr
+  };
 };
 }
 }
