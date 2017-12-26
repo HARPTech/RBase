@@ -1,6 +1,7 @@
 #ifndef LRT_RREGISTRY_REGISTRY_HPP
 #define LRT_RREGISTRY_REGISTRY_HPP
 
+#include "DebuggingDataStore.hpp"
 #include "Detail.hpp"
 #include "Entries.hpp"
 #include "RegistryReceiver.hpp"
