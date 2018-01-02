@@ -105,6 +105,23 @@ union LiteCommData
                               TypeCategory value,
                               size_t&& i = 0);
 
+#define LRT_RREGISTRY_LITECOMM_FROMREGISTRY_CASE(CLASS)                     \
+  case rregistry::Type::CLASS:                                              \
+    fromType(data, registry->get(static_cast<rregistry::CLASS>(property))); \
+    break;
+
+  template<class RegistryPtr>
+  inline static void fromRegistry(RegistryPtr registry,
+                                  LiteCommData& data,
+                                  rregistry::Type type,
+                                  uint16_t property)
+  {
+    switch(type) {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+        LRT_RREGISTRY_LITECOMM_FROMREGISTRY_CASE)
+    }
+  }
+
 #define LRT_RCOMM_LITECOMMDATA_FROMREGISTRYENTRY_CASE(TYPE)             \
   case rregistry::Type::TYPE:                                           \
     fromType(data, registry->get(static_cast<rregistry::TYPE>(entry))); \

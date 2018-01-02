@@ -109,10 +109,13 @@ class LiteCommAdapter
     std::shared_ptr<RegistryClass> registry,
     bool subscribed = false,
     std::shared_ptr<rregistry::DebuggingDataStore> debuggingDataStore = nullptr,
-    const char* adapterName = "Unnamed Adapter")
+    const char* adapterName = "Unnamed Adapter",
+    int adapterId = 0)
     : m_registry(registry)
     , m_subscriptions(rregistry::InitSubscriptionMap(subscribed))
     , m_adapterName(adapterName)
+    , m_debuggingDataStore(debuggingDataStore)
+    , m_adapterId(adapterId)
   {}
   ~LiteCommAdapter() {}
 
@@ -289,8 +292,10 @@ class LiteCommAdapter
 
     switch(msg.lType()) {
       case LiteCommType::Update:
-        for(size_t i = 0; i < 8; ++i)
+        for(size_t i = 0; i < 8; ++i) {
           lData.byte[i] = (*it++);
+          m_lastData.byte[i] = lData.byte[i];
+        }
 
         m_acceptProperty = false;
         SetLiteCommDataToRegistry(type, lProp.property, lData, m_registry);
@@ -343,8 +348,17 @@ class LiteCommAdapter
             case DebugMode::WaitingForSet:
               // The received event must be a Get-notification, because no Set
               // has been issued.
-              m_debuggingDataStore->getOp(
-                m_adapterName, type, lProp.property, lDebugPos.pos);
+              // Generate the data which is received. This should be the value
+              // of the property at the time of this request.
+              LiteCommData::fromRegistry(
+                m_registry, lData, type, lProp.property);
+
+              m_debuggingDataStore->getOp(m_adapterName,
+                                          m_adapterId,
+                                          type,
+                                          lProp.property,
+                                          lData,
+                                          lDebugPos.pos);
               break;
             case DebugMode::SetReceived:
               // The received event must be a Set-notification, because the last
@@ -354,8 +368,12 @@ class LiteCommAdapter
               // Get-notifications.
               m_debugState = DebugMode::WaitingForSet;
 
-              m_debuggingDataStore->setOp(
-                m_adapterName, type, lProp.property, lData, lDebugPos.pos);
+              m_debuggingDataStore->setOp(m_adapterName,
+                                          m_adapterId,
+                                          type,
+                                          lProp.property,
+                                          m_lastData,
+                                          lDebugPos.pos);
               break;
           }
         }
@@ -380,6 +398,12 @@ class LiteCommAdapter
       cb(m_adapterName, lType, type, property);
   }
 
+  void setAdapterName(const char* name) { m_adapterName = name; }
+  void setAdapterId(int adapterId) { m_adapterId = adapterId; }
+
+  const char* adapterName() { return m_adapterName; }
+  int adapterId() { return m_adapterId; }
+
   protected:
   template<class TypeCategory>
   void setBack(TypeCategory property, LiteCommAdapter* self = nullptr)
@@ -400,6 +424,8 @@ class LiteCommAdapter
   DebugMode m_debugState = DebugMode::WaitingForSet;
   rregistry::Type m_lastSetType;
   uint16_t m_lastSetProperty;
+  LiteCommData m_lastData;
+  int m_adapterId = 0;
 
   MsgCallback m_messageCallback[static_cast<size_t>(LiteCommType::_COUNT)] = {
     nullptr
