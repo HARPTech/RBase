@@ -17,14 +17,17 @@ class DebuggingDataStore
 {
   public:
   virtual void setOp(const char* adapter,
+                     int id,
                      rregistry::Type type,
                      uint16_t property,
                      const rcomm::LiteCommData& lData,
                      int32_t posId) = 0;
 
   virtual void getOp(const char* adapter,
+                     int id,
                      rregistry::Type type,
                      uint16_t property,
+                     const rcomm::LiteCommData& lData,
                      int32_t posId) = 0;
 };
 }
