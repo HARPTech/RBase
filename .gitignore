@@ -45,6 +45,29 @@ flycheck_*.el
 .dir-locals.el
 
 build/
+build-*
+packages
+rmaster-arm64
+.kdev4/
+
+# Swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+
+# Session
+Session.vim
+
+# Temporary
+.netrwhist
+*~
+# Auto-generated tag files
+tags
+
+build/
+
+out/
 
 CMakeFiles/
 Makefile
