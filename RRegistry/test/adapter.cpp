@@ -1,4 +1,5 @@
-#include "catch.hpp"
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>
 
 #include <RRegistry/Registry.hpp>
 #include <RRegistry/TypeConverter.hpp>

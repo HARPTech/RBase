@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-
+cmake_policy(SET CMP0048 NEW)
 project(RRegistry
     VERSION 0.1.0)
 
@@ -20,3 +20,5 @@ target_compile_definitions(rregistry
 target_link_libraries(rregistry INTERFACE rcomm)
 
 target_include_directories(rregistry INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_subdirectory(test)
