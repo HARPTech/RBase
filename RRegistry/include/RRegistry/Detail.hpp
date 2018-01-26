@@ -75,7 +75,8 @@ static constexpr TypeDetail TypeDetail[static_cast<size_t>(Type::_COUNT)] = {
   { "Int64",
     "64 bit wide signed integer.",
     "INT",
-    TypeTraits::Numeric | TypeTraits::Signed | TypeTraits::Integer | TypeTraits::Long,
+    TypeTraits::Numeric | TypeTraits::Signed | TypeTraits::Integer |
+      TypeTraits::Long,
     Type::Int64 },
   { "Uint8",
     "8 bit wide unsigned integer.",
@@ -95,7 +96,8 @@ static constexpr TypeDetail TypeDetail[static_cast<size_t>(Type::_COUNT)] = {
   { "Uint64",
     "64 bit wide unsigned integer.",
     "INT",
-    TypeTraits::Numeric | TypeTraits::Unsigned | TypeTraits::Integer | TypeTraits::Long,
+    TypeTraits::Numeric | TypeTraits::Unsigned | TypeTraits::Integer |
+      TypeTraits::Long,
     Type::Uint64 },
   { "Float",
     "32 bit wide floating point number.",
@@ -383,6 +385,12 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Double) = {};
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Bool) = {
   { "TEST_RBREAKOUT_COMMUNICATION",
     "Test the communication channel between RMaster and RBrreakout.",
+    "",
+    false,
+    false,
+    true },
+  { "TEST_PIPE_COMMUNICATION",
+    "Test the communication to and from pipe connections.",
     "",
     false,
     false,

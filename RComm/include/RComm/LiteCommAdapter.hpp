@@ -116,7 +116,8 @@ class LiteCommAdapter
     , m_adapterName(adapterName)
     , m_debuggingDataStore(debuggingDataStore)
     , m_adapterId(adapterId)
-  {}
+  {
+  }
   ~LiteCommAdapter() {}
 
   /**
@@ -228,6 +229,43 @@ class LiteCommAdapter
     (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                             [static_cast<std::size_t>(property)] = false;
+  }
+
+#define LRT_RCOMM_LITECOMMADAPTER_REQUESTBYTYPEVAL_CASE(CLASS) \
+  case rregistry::Type::CLASS:                                 \
+    request(static_cast<rregistry::CLASS>(property));          \
+    break;
+
+  inline void requestByTypeVal(rregistry::Type type, uint16_t property)
+  {
+    switch(type) {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+        LRT_RCOMM_LITECOMMADAPTER_REQUESTBYTYPEVAL_CASE)
+    }
+  }
+#define LRT_RCOMM_LITECOMMADAPTER_SUBSCRIBEBYTYPEVAL_CASE(CLASS) \
+  case rregistry::Type::CLASS:                                   \
+    subscribe(static_cast<rregistry::CLASS>(property));          \
+    break;
+
+  inline void subscribeByTypeVal(rregistry::Type type, uint16_t property)
+  {
+    switch(type) {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+        LRT_RCOMM_LITECOMMADAPTER_SUBSCRIBEBYTYPEVAL_CASE)
+    }
+  }
+#define LRT_RCOMM_LITECOMMADAPTER_UNSUBSCRIBEBYTYPEVAL_CASE(CLASS) \
+  case rregistry::Type::CLASS:                                     \
+    unsubscribe(static_cast<rregistry::CLASS>(property));          \
+    break;
+
+  inline void unsubscribeByTypeVal(rregistry::Type type, uint16_t property)
+  {
+    switch(type) {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+        LRT_RCOMM_LITECOMMADAPTER_UNSUBSCRIBEBYTYPEVAL_CASE)
+    }
   }
 
   template<typename TypeCategory>
