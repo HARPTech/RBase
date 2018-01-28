@@ -149,6 +149,9 @@ rsupport_handle_set_Bool(RSupportHandle* handle, uint16_t property, bool value);
 std::shared_ptr<lrt::rregistry::Registry>
 rsupport_handle_get_registry(RSupportHandle* handle);
 
+namespace lrt {
+namespace rsupport {
+
 /**
  * @brief Utility binding if SWIG is used.
  *
@@ -200,6 +203,8 @@ class RSupport
   private:
   RSupportHandlePtr m_handle;
 };
+}
+}
 
 #endif
 
