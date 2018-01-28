@@ -16,6 +16,7 @@ namespace lrt {
 namespace rsupport {
 PipeAdapter::PipeAdapter(std::shared_ptr<rregistry::Registry> registry)
   : LiteCommAdapter(registry)
+  , m_messageIt(m_message.buf.begin())
 {
 }
 PipeAdapter::~PipeAdapter() {}

@@ -15,6 +15,8 @@ add_subdirectory(RComm)
 add_subdirectory(RRegistry)
 add_subdirectory(RSupport)
 
+add_subdirectory(swig)
+
 get_directory_property(hasParent PARENT_DIRECTORY)
 
 if(${hasParent})

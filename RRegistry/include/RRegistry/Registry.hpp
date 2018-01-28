@@ -166,8 +166,12 @@ class Registry
     return &m_##CLASS##Array[static_cast<uint16_t>(property)];       \
   }
 
+#ifndef SWIG
+
 LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
   LRT_RREGISTRY_REGISTRY_GETARRAYFORTYPE_HELPER)
+
+#endif
 }
 }
 

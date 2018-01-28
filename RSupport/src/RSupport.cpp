@@ -28,17 +28,25 @@ rsupport_handle_create()
   handle->registry = std::make_shared<lrt::rregistry::Registry>();
   handle->adapter =
     std::make_shared<lrt::rsupport::PipeAdapter>(handle->registry);
+
+  handle->registry->registerAdapter(handle->adapter);
+  return handle;
 }
 
 RSupportStatus
 rsupport_handle_free(RSupportHandle* handle)
 {
+  handle->registry->removeAdapter(handle->adapter);
   delete handle;
 }
 
 RSupportStatus
-rsupport_handle_connect(RSupportHandle* handle, const char* pipe)
+rsupport_handle_service(RSupportHandle* handle)
 {
+  handle->adapter->service();
+}
+
+const char* getPipePath(const char *pipe) {
   if(pipe == 0) {
     // Receive pipe path.
     const char* env_path = std::getenv("LRT_PIPE_PATH");
@@ -46,7 +54,21 @@ rsupport_handle_connect(RSupportHandle* handle, const char* pipe)
       env_path = "/tmp/lrt_pipe_path.pipe";
     }
   }
+  return pipe;
+}
+
+RSupportStatus
+rsupport_handle_connect(RSupportHandle* handle, const char* pipe)
+{
+  pipe = getPipePath(pipe);
   handle->adapter->connect(pipe);
+}
+
+RSupportStatus
+rsupport_handle_connect_create(RSupportHandle* handle, const char* pipe)
+{
+  pipe = getPipePath(pipe);
+  handle->adapter->create(pipe);
 }
 
 RSupportStatus
@@ -101,4 +123,10 @@ rsupport_handle_request(RSupportHandle* handle,
 {
   handle->adapter->requestByTypeVal(static_cast<lrt::rregistry::Type>(type),
                                     property);
+}
+
+std::shared_ptr<lrt::rregistry::Registry>
+rsupport_handle_get_registry(RSupportHandle* handle)
+{
+  return handle->registry;
 }

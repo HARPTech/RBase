@@ -12,7 +12,7 @@ class PipeAdapter : public rregistry::Registry::Adapter
   PipeAdapter(std::shared_ptr<rregistry::Registry> registry);
   virtual ~PipeAdapter();
 
-  virtual void send(const Message& msg) override;
+  virtual void send(const rregistry::Registry::Adapter::Message& msg) override;
 
   /**
    * @brief Connects to the two fifos at the provided path.
@@ -29,8 +29,8 @@ class PipeAdapter : public rregistry::Registry::Adapter
   int outFd() { return m_out_fd; }
 
   private:
-  Message m_message;
-  Message::Buffer::iterator m_messageIt = m_message.buf.begin();
+  rregistry::Registry::Adapter::Message m_message;
+  rregistry::Registry::Adapter::Message::Buffer::iterator m_messageIt;
   int m_in_fd = 0, m_out_fd = 0;
   std::string m_inFifo;
   std::string m_outFifo;

@@ -1,4 +1,4 @@
-%module PyRRegistry
+%module RRegistry
 
 %{
     #define SWIG_FILE_WITH_INIT
@@ -11,9 +11,7 @@
     using namespace lrt::rregistry;
 %}
 
-%include "stdint.i"
-%include "numpy.i"
-%include "std_shared_ptr.i"
+%include "shared.i"
 
 %init %{
     import_array();
@@ -21,23 +19,9 @@
 
 %shared_ptr(rregistry::Registry)
 
-%numpy_typemaps(unsigned char, NPY_UNSIGNED_CHAR, int)
-%numpy_typemaps(signed char, NPY_SIGNED_CHAR, int)
-%numpy_typemaps(unsigned short, NPY_UNSIGNED_SHORT, int)
-%numpy_typemaps(short, NPY_SHORT, int)
-%numpy_typemaps(int, NPY_INT, int)
-%numpy_typemaps(unsigned int, NPY_UNSIGNED_INT, int)
-%numpy_typemaps(long, NPY_LONG, int)
-%numpy_typemaps(unsigned long, NPY_UNSIGNED_LONG, int)
-%numpy_typemaps(long long, NPY_LONG_LONG, int)
-%numpy_typemaps(unsigned long long, NPY_UNSIGNED_LONG_LONG, int)
-%numpy_typemaps(float, NPY_FLOAT, int)
-%numpy_typemaps(double, NPY_DOUBLE, int)
-%numpy_typemaps(bool, NPY_UINT, int)
-
-%include "../include/RRegistry/Entries.hpp"
-%include "../include/RRegistry/TypeConverter.hpp"
-%include "../include/RRegistry/Registry.hpp"
+%include "../RRegistry/include/RRegistry/Entries.hpp"
+%include "../RRegistry/include/RRegistry/TypeConverter.hpp"
+%include "../RRegistry/include/RRegistry/Registry.hpp"
 
  // Special template functions.
      %template(setInt8) lrt::rregistry::Registry::set<lrt::rregistry::Int8, signed char>;
