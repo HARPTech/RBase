@@ -38,6 +38,8 @@ typedef enum RSupportStatus {
   RSupportStatus__Count
 } RSupportStatus;
 
+static const char* RSupportDefaultFifoPath = "/tmp/lrt_pipe_path.pipe";
+
 const char*
 rsupport_status_msg(RSupportStatus status);
 
