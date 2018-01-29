@@ -225,7 +225,7 @@ enum class LiteCommType
   _COUNT
 };
 
-constexpr const char*
+inline const char*
 GetNameOfLiteCommType(LiteCommType type)
 {
   switch(type) {

@@ -19,9 +19,15 @@
 
 %shared_ptr(rregistry::Registry)
 
+// Fix for old versions of swig, found at https://sourceforge.net/p/swig/mailman/message/21459691/
+%ignore pLfeTagSel;
+%ignore pDataTagSel;
+%ignore pComFieldData;
+
 %include "../RRegistry/include/RRegistry/Entries.hpp"
 %include "../RRegistry/include/RRegistry/TypeConverter.hpp"
 %include "../RRegistry/include/RRegistry/Registry.hpp"
+
 
  // Special template functions.
      %template(setInt8) lrt::rregistry::Registry::set<lrt::rregistry::Int8, signed char>;

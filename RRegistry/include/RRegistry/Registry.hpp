@@ -27,12 +27,12 @@ class Registry
   Registry() { initDefaults(); }
   ~Registry() {}
 
-  using Adapter = rcomm::LiteCommAdapter<Registry>;
-  using AdapterPtr = std::shared_ptr<Adapter>;
+  typedef rcomm::LiteCommAdapter<Registry> Adapter;
+  typedef std::shared_ptr<Adapter> AdapterPtr;
 
   // The receivers are a collection of raw pointers to make easy registering
   // easier to do. For example in class constructors and destructors.
-  using ReceiverPtr = RegistryReceiver*;
+  typedef RegistryReceiver* ReceiverPtr;
 
   void initDefaults()
   {
@@ -129,6 +129,8 @@ class Registry
   std::vector<AdapterPtr> m_adapters;
   std::vector<ReceiverPtr> m_receivers;
 
+#ifndef SWIG
+
 #define LRT_RREGISTRY_REGISTRY_MEMBER_HELPER(CLASS) \
   Registry::ValueArray<CLASS> m_##CLASS##Array;
 
@@ -143,7 +145,11 @@ class Registry
   template<typename TypeCategory>
   inline typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type
   getFromArray(TypeCategory property);
+
+#endif
 };
+
+#ifndef SWIG
 
 #define LRT_RREGISTRY_REGISTRY_GETARRAYFORTYPE_HELPER(CLASS)         \
   template<>                                                         \
@@ -165,8 +171,6 @@ class Registry
   {                                                                  \
     return &m_##CLASS##Array[static_cast<uint16_t>(property)];       \
   }
-
-#ifndef SWIG
 
 LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
   LRT_RREGISTRY_REGISTRY_GETARRAYFORTYPE_HELPER)

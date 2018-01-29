@@ -108,20 +108,21 @@ LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, LRT_STRING_TYPE)
   CPP_FUNC(Double)                                 \
   CPP_FUNC(Bool)
 
-#define LRT_RREGISTRY_GETENTRYCOUNT_CASE(CLASS) \
-  case Type::CLASS:                             \
-    return static_cast<size_t>(CLASS::_COUNT);  \
-    break;
+#ifndef SWIG
+
+#define LRT_RREGISTRY_GETENTRYCOUNT_ENTRY(CLASS) static_cast<size_t>(CLASS::_COUNT),
+
+constexpr size_t GetEntryCountTypes[static_cast<size_t>(Type::_COUNT)] = {
+  LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+    LRT_RREGISTRY_GETENTRYCOUNT_ENTRY)
+};
+
+#endif
 
 constexpr size_t
 GetEntryCount(Type type)
 {
-  switch(type) {
-    LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
-      LRT_RREGISTRY_GETENTRYCOUNT_CASE)
-    default:
-      return 0;
-  }
+  return GetEntryCountTypes[static_cast<size_t>(type)];
 }
 }
 }

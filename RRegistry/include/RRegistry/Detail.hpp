@@ -504,7 +504,7 @@ GetEntryDetail(TypeCategory property);
 
 LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RREGISTRY_GETENTRYDETAIL_SPECIAL)
 
-constexpr std::size_t
+inline std::size_t
 GetFullEntryCount()
 {
   std::size_t total = 0;

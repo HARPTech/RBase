@@ -9,4 +9,5 @@ if(${SWIG_FOUND})
 		# Python
 		# ======
 		add_subdirectory(python)
+
 endif()
