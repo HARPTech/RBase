@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Docker Setup') {
             steps {
-                sh """ docker build -t rbase-arm64 """
+                sh """ docker build -t rbase-arm64 . """
 								sh """ docker run --rm rbase-arm64 > ./rbase-arm64 """
 								sh """    chmod +x ./rbase-arm64 """
             }
