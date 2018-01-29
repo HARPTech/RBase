@@ -3,10 +3,6 @@ cmake_minimum_required(VERSION 3.0.2)
 project(RBase
 		VERSION 0.2.0)
 
-if(POLICY CMP0058)
-    cmake_policy(SET CMP0058 NEW)
-endif()
-
 set(VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 option(testing "Enable building tests" OFF)
@@ -14,6 +10,15 @@ option(testing "Enable building tests" OFF)
 if(${testing})
 		enable_testing()
 endif()
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(STATUS "GCC compiler detected.")
+    set (CMAKE_CXX_FLAGS "-std=gnu++14 ${CMAKE_CXX_FLAGS}")
+endif ()
+
 
 add_subdirectory(test)
 
@@ -36,7 +41,7 @@ else()
 
 		set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
 		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Support library for writing regulation kernels and other software around RMaster")
-		set(CPACK_PACKAGE_NAME "RSupport")
+		set(CPACK_PACKAGE_NAME "RBase")
 		set(CPACK_PACKAGE_VENDOR "Harptech")
 		set(CPACK_PACKAGE_VERSION ${VERSION})
 		set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
