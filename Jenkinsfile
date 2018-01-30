@@ -35,10 +35,16 @@ pipeline {
         }
 				stage('Publish') {
             steps {
-                sh """ aptly repo add harptech-testing ./packages/*.deb """
+                sh """ aptly repo add -force-replace harptech-testing ./packages/*.deb """
 								sh """ aptly publish update jessie testing """
 								sh """ rsync -avh  --no-perms --no-owner --no-group /var/lib/jenkins/.aptly/public/ /mnt/harptech-repos-deb/ --delete """
             }
         }
+    }
+
+    post {
+        always {
+            junit 'build/**/report.xml'
+				}
     }
 }
