@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
+    }
+
     stages {
         stage('Docker Setup') {
             steps {
@@ -21,7 +25,7 @@ pipeline {
         }
 				stage('Test') {
             steps {
-						    sh """ make -C build test ARGS="-T Test" """
+						    sh """ ./rbase-arm64 make -C build test ARGS="-T Test" """
 						}
         }
 				stage('Package') {
