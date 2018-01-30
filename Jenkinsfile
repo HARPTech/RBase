@@ -26,7 +26,6 @@ pipeline {
 				stage('Test') {
             steps {
 						    sh """ ./rbase-arm64 make -C build test ARGS="-T Test" """
-                junit 'build/*/*/report.xml'
 						}
         }
 				stage('Package') {
