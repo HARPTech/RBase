@@ -19,15 +19,15 @@ pipeline {
                 sh """ ./rbase-arm64 make -C build -j 2 """
             }
         }
+				stage('Test') {
+            steps {
+						    sh """ make -C buildArm64 test ARGS="-T Test" """
+						}
+        }
 				stage('Package') {
 				    steps {
                 sh """ ./rbase-arm64 make -C build package -j 2 """
             }
-        }
-				stage('Test') {
-            steps {
-						    sh """ ctest """
-						}
         }
 				stage('Publish') {
             steps {
