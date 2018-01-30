@@ -15,7 +15,7 @@ pipeline {
         }
 				stage('Configure') {
 				    steps {
-                sh """ ./rbase-arm64 cmake -Bbuild -H. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
+                sh """ ./rbase-arm64 cmake -Bbuild -H. -G'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
             }
         }
 				stage('Build') {
