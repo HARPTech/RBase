@@ -15,7 +15,7 @@ pipeline {
         }
 				stage('Configure') {
 				    steps {
-                sh """ ./rbase-arm64 cmake -Bbuild -H. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -Dtesting=ON """
+                sh """ ./rbase-arm64 cmake -Bbuild -H. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
             }
         }
 				stage('Build') {
@@ -35,7 +35,7 @@ pipeline {
         }
 				stage('Publish') {
             steps {
-                sh """ aptly repo add -force-replace harptech-testing ./packages/*.deb """
+                sh """ aptly repo add harptech-testing ./packages/*.deb """
 								sh """ aptly publish update jessie testing """
 								sh """ rsync -avh  --no-perms --no-owner --no-group /var/lib/jenkins/.aptly/public/ /mnt/harptech-repos-deb/ --delete """
             }
