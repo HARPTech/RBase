@@ -40,7 +40,6 @@ if(${hasParent})
 				PARENT_SCOPE)
 else()
 		# Installation logic, only executed if there is no parent!
-		include(GNUInstallDirs)
 		set(CPACK_GENERATOR "DEB")
 
 		set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
