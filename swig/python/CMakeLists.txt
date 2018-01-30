@@ -13,10 +13,12 @@ SWIG_ADD_LIBRARY(RSupport LANGUAGE python SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/rs
 SWIG_LINK_LIBRARIES(RSupport rsupport ${PYTHON_LIBRARIES})
 set_property(SOURCE rsupport.i PROPERTY SWIG_MODULE_NAME RSupport)
 
-install(FILES
-		${CMAKE_CURRENT_BINARY_DIR}/RRegistry.py
-		${CMAKE_CURRENT_BINARY_DIR}/_RRegistry.so
-		${CMAKE_CURRENT_BINARY_DIR}/RSupport.py
-		${CMAKE_CURRENT_BINARY_DIR}/_RSupport.so
-		DESTINATION share/python3
-		)
+if(${INSTALL})
+		install(FILES
+				${CMAKE_CURRENT_BINARY_DIR}/RRegistry.py
+				${CMAKE_CURRENT_BINARY_DIR}/_RRegistry.so
+				${CMAKE_CURRENT_BINARY_DIR}/RSupport.py
+				${CMAKE_CURRENT_BINARY_DIR}/_RSupport.so
+				DESTINATION share/python3
+				)
+endif()

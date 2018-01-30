@@ -13,6 +13,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(AdditionalCatchParameters -o report.xml -r junit)
 
+
+if(NOT ${hasParent})
+		set(INSTALL ON)
+endif()
+
 if(${testing})
 		enable_testing()
 endif()
