@@ -1,12 +1,10 @@
-file(GLOB TEST_SRCS "*.cpp")
+file(GLOB SRCS "*.cpp")
 
-add_executable(rsupport_test_pipeadapter
-		${CMAKE_CURRENT_SOURCE_DIR}/pipeadapter.cpp)
+add_executable(rsupport_tests ${SRCS})
 
-target_link_libraries(rsupport_test_pipeadapter Catch)
-target_link_libraries(rsupport_test_pipeadapter rregistry)
-target_link_libraries(rsupport_test_pipeadapter rsupport)
+target_link_libraries(rsupport_tests Catch)
+target_link_libraries(rsupport_tests rregistry)
+target_link_libraries(rsupport_tests rsupport)
 
-add_test(
-		NAME RSupport_PipeAdapter
-		COMMAND rsupport_test_pipeadapter)
+include(ParseAndAddCatchTests)
+ParseAndAddCatchTests(rsupport_tests)

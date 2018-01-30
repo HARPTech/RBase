@@ -1,11 +1,9 @@
-file(GLOB TEST_SRCS "*.cpp")
+file(GLOB SRCS "*.cpp")
 
-add_executable(rregistry_test_adapter
-		${CMAKE_CURRENT_SOURCE_DIR}/adapter.cpp)
+add_executable(rregistry_tests ${SRCS})
 
-target_link_libraries(rregistry_test_adapter Catch)
-target_link_libraries(rregistry_test_adapter rregistry)
+target_link_libraries(rregistry_tests Catch)
+target_link_libraries(rregistry_tests rregistry)
 
-add_test(
-		NAME RRegistry_Adapter
-		COMMAND rregistry_test_adapter)
+include(ParseAndAddCatchTests)
+ParseAndAddCatchTests(rregistry_tests)

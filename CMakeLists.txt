@@ -5,7 +5,11 @@ project(RBase
 
 set(VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
-option(testing "Enable building tests" OFF)
+option(testing "Enable building tests" ON)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+set(AdditionalCatchParameters -o report.xml -r junit)
 
 if(${testing})
 		enable_testing()
