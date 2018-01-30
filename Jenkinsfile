@@ -21,7 +21,7 @@ pipeline {
         }
 				stage('Test') {
             steps {
-						    sh """ make -C buildArm64 test ARGS="-T Test" """
+						    sh """ make -C build test ARGS="-T Test" """
 						}
         }
 				stage('Package') {
