@@ -26,6 +26,7 @@ pipeline {
 				stage('Test') {
             steps {
 						    sh """ ./rbase-arm64 make -C build test ARGS="-T Test" """
+                junit 'build/*/*/report.xml'
 						}
         }
 				stage('Package') {
@@ -39,11 +40,5 @@ pipeline {
 								sh """ aptly publish update jessie testing """
             }
         }
-    }
-
-    post {
-        always {
-            junit 'build/*/*/report.xml'
-				}
     }
 }
