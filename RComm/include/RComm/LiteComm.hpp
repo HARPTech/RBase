@@ -284,24 +284,39 @@ struct LiteCommDictEntry
    *
    * The entries define the properties to be sent according to this dictionary.
    */
-  LiteCommDictEntryHandler handlers[];
+  LiteCommDictEntryHandler *handlers;
 };
 struct LiteCommDict
 {
   const char* name;
   size_t length;
-  LiteCommDictEntry entries[];
+  LiteCommDictEntry *entries;
 };
 
-inline size_t
-GetByteLengthOfDictInstance(uint8_t receivedByte,
-                            const LiteCommDict* dict)
+inline uint8_t
+GetDictIdOfDictInstance(uint8_t receivedByte)
 {
   uint8_t id = (receivedByte << 1);
-  id >> 1;
+  id = id >> 1;
+  return id;
+}
+
+inline size_t
+GetByteLengthOfDictInstance(uint8_t receivedByte, const LiteCommDict* dict)
+{
+  uint8_t id = GetDictIdOfDictInstance(receivedByte);
   if(id < dict->length)
     return dict->entries[id].length;
   return 0;
+}
+
+inline const LiteCommDictEntry*
+GetDictEntryForDictInstance(uint8_t receivedByte, const LiteCommDict* dict)
+{
+  uint8_t id = GetDictIdOfDictInstance(receivedByte);
+  if(id < dict->length)
+    return &dict->entries[id];
+  return nullptr;
 }
 
 inline const LiteCommDictEntry*

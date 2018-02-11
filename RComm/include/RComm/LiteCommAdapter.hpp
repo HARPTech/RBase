@@ -172,10 +172,15 @@ class LiteCommAdapter
               message.buf[i + 2] =
                 m_registry->get(static_cast<Uint8>(handler->prop));
               break;
-            case Type::Int8:
-              message.buf[i + 2] =
-                m_registry->get(static_cast<Int8>(handler->prop));
+            case Type::Int8: {
+              int8_t val = m_registry->get(static_cast<Int8>(handler->prop));
+              if(val < 0) {
+                message.setSingleBit(i + 8);
+                val = -val;
+              }
+              message.buf[i + 2] = static_cast<uint8_t>(val);
               break;
+            }
             case Type::Int16: {
               int16_t val = m_registry->get(static_cast<Int16>(handler->prop));
               if(val < 0) {
@@ -234,9 +239,9 @@ class LiteCommAdapter
       std::size_t stringLength = lData.Int32;
       for(std::size_t i = 0; i < stringLength; i += 8) {
         // The fromType iterates i up to the point it needs to run again,
-        // because internally it copies as much as possible from the string into
-        // the byte[] buffer of data. After each run, the resulting data should
-        // be sent as an LiteCommType::Append message.
+        // because internally it copies as much as possible from the string
+        // into the byte[] buffer of data. After each run, the resulting data
+        // should be sent as an LiteCommType::Append message.
 
         LiteCommData::fromType(lData, value, i + 1);
 
@@ -408,14 +413,14 @@ class LiteCommAdapter
         SetLiteCommDataToRegistry(type, lProp.property, lData, m_registry);
         m_acceptProperty = true;
 
-        // There was a set (= update), so the internal debugging state has to be
-        // updated to reflect this change.
+        // There was a set (= update), so the internal debugging state has to
+        // be updated to reflect this change.
         m_debugState = DebugMode::SetReceived;
         break;
       case LiteCommType::Append:
-        // Currently, only rregistry::String needs to be appended because of the
-        // varying length. This is why only the rregistry::Type::String case is
-        // handled in this case.
+        // Currently, only rregistry::String needs to be appended because of
+        // the varying length. This is why only the rregistry::Type::String
+        // case is handled in this case.
         for(size_t i = 0; i < 8; ++i)
           lData.byte[i] = (*it++);
 
@@ -468,9 +473,9 @@ class LiteCommAdapter
                                           lDebugPos.pos);
               break;
             case DebugMode::SetReceived:
-              // The received event must be a Set-notification, because the last
-              // received update was a set too. After this notification, the
-              // internal state will immediately be switched to
+              // The received event must be a Set-notification, because the
+              // last received update was a set too. After this notification,
+              // the internal state will immediately be switched to
               // DebugMode::WaitingForSet again to process any following
               // Get-notifications.
               m_debugState = DebugMode::WaitingForSet;
