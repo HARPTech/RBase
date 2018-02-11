@@ -27,6 +27,8 @@ LiteCommDict_RBreakout_Init()
 
   entries[0].handlers = handlers1;
   entries[0].length = 8;
+  entries[0].trigger = rregistry::Bool::BRST_RBREAKOUT_MOVEMENT;
+  entries[0].id = 0;
 
   LiteCommDict_RBreakout.entries = entries;
 }
