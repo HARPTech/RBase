@@ -35,6 +35,7 @@ class LiteCommAdapter
   struct Message
   {
     static const std::size_t maxLength = 12;
+    std::size_t explicit_length = 0;
 
     using Buffer = std::array<uint8_t, maxLength>;
 
@@ -55,16 +56,19 @@ class LiteCommAdapter
      */
     inline std::size_t length() const
     {
-      switch(lType()) {
-        case LiteCommType::Update:
-        case LiteCommType::Append:
+      switch(buf[0]) {
+        case static_cast<uint8_t>(LiteCommType::Update):
+        case static_cast<uint8_t>(LiteCommType::Append):
           return 12;
-        case LiteCommType::Request:
-        case LiteCommType::Subscribe:
-        case LiteCommType::Unsubscribe:
+        case static_cast<uint8_t>(LiteCommType::Request):
+        case static_cast<uint8_t>(LiteCommType::Subscribe):
+        case static_cast<uint8_t>(LiteCommType::Unsubscribe):
           return 4;
-        case LiteCommType::Debug:
+        case static_cast<uint8_t>(LiteCommType::Debug):
           return 8;
+        default:
+          // Must be a custom length.
+          return explicit_length;
       }
     }
 
@@ -82,6 +86,12 @@ class LiteCommAdapter
       const typename Buffer::const_iterator it) const
     {
       return (buf.begin() + length()) - it;
+    }
+
+    void setSingleBit(uint8_t bit)
+    {
+      uint8_t& byte = buf[bit / 8];
+      byte |= (1 << (7 - (bit % 8)));
     }
   };
 
@@ -136,17 +146,69 @@ class LiteCommAdapter
     typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value)
   {
     using namespace rcomm;
+    using namespace rregistry;
 
     if(!m_acceptProperty)
       return;
+
+    thread_local Message message;
+
+    if(m_dictionary && GetEnumTypeOfEntryClass(property) == Type::Bool) {
+      // This variant is currently only used between RMaster and RBReakout,
+      // which is why there is no receive logic implemented.
+
+      // Check if this is the trigger property.
+      const LiteCommDictEntry* entry = GetDictEntryForTriggerProperty(
+        static_cast<Bool>(property), m_dictionary);
+      if(entry != nullptr) {
+        // This transforms the current update to a burst update.
+        message.buf[0] = entry->id | (1 << 7);
+        message.buf[1] = 0;
+        for(std::size_t i = 0; i < entry->length; ++i) {
+          const LiteCommDictEntryHandler* handler = &entry->handlers[i];
+          // Append each individual property to the message.
+          switch(handler->propertyType) {
+            case Type::Uint8:
+              message.buf[i + 2] =
+                m_registry->get(static_cast<Uint8>(handler->prop));
+              break;
+            case Type::Int8:
+              message.buf[i + 2] =
+                m_registry->get(static_cast<Int8>(handler->prop));
+              break;
+            case Type::Int16: {
+              int16_t val = m_registry->get(static_cast<Int16>(handler->prop));
+              if(val < 0) {
+                message.setSingleBit(i + 8);
+                val = -val;
+              }
+              message.buf[i + 2] = static_cast<uint8_t>(val);
+              break;
+            }
+            default:
+              // Not supported!
+              return;
+              break;
+          }
+        }
+        message.explicit_length = entry->length + 2;
+
+        // Message is ready to be sent!
+        send(message);
+
+        // Set the burst request to false.
+        m_acceptProperty = false;
+        m_registry->set(static_cast<Bool>(property), false);
+        m_acceptProperty = true;
+      }
+      return;
+    }
 
     // Check if the property has been subscribed by the current adapter.
     if(!(*m_subscriptions)[static_cast<std::size_t>(
          rregistry::GetEnumTypeOfEntryClass(property))]
                           [static_cast<uint32_t>(property)])
       return;
-
-    Message message;
 
     LiteCommType lType = LiteCommType::Update;
     rregistry::Type type = GetEnumTypeOfEntryClass(property);
@@ -274,6 +336,13 @@ class LiteCommAdapter
     return (*m_subscriptions)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                              [static_cast<uint32_t>(property)];
+  }
+  template<typename TypeCategory>
+  bool setSubscribed(TypeCategory property, bool subscribed)
+  {
+    (*m_subscriptions)[static_cast<std::size_t>(
+      rregistry::GetEnumTypeOfEntryClass(property))]
+                      [static_cast<uint32_t>(property)] = subscribed;
   }
   template<typename TypeCategory>
   bool isSubscribedTo(TypeCategory property)
@@ -464,6 +533,7 @@ class LiteCommAdapter
   uint16_t m_lastSetProperty;
   LiteCommData m_lastData;
   int m_adapterId = 0;
+  const rcomm::LiteCommDict* m_dictionary = nullptr;
 
   MsgCallback m_messageCallback[static_cast<size_t>(LiteCommType::_COUNT)] = {
     nullptr

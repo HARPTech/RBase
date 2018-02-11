@@ -15,6 +15,8 @@ const char* RSupportStatusNames[RSupportStatus__Count] = {
   "Other Error"
 };
 
+const char* RSupportDefaultFifoPath = "/tmp/lrt_pipe_path.pipe";;
+
 const char*
 rsupport_status_msg(RSupportStatus status)
 {

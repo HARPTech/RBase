@@ -257,6 +257,64 @@ union LiteCommDebugPos
   uint32_t pos;
   uint8_t byte[4];
 };
+
+const uint8_t LiteCommCompact_Positive = (0 << 0);
+const uint8_t LiteCommCompact_Negative = (1 << 0);
+
+struct LiteCommDictEntryHandler
+{
+  template<typename TypeCategory>
+  LiteCommDictEntryHandler(TypeCategory property)
+  {
+    propertyType = rregistry::GetEnumTypeOfEntryClass(property);
+    prop = static_cast<uint16_t>(property);
+  }
+
+  rregistry::Type propertyType;
+  uint16_t prop;
+};
+
+struct LiteCommDictEntry
+{
+  uint8_t id;
+  size_t length;
+  rregistry::Bool trigger;
+  /** @brief This list of handlers is either of length 1 or longer, but smaller
+   * or equal to 9.
+   *
+   * The entries define the properties to be sent according to this dictionary.
+   */
+  LiteCommDictEntryHandler handlers[];
+};
+struct LiteCommDict
+{
+  const char* name;
+  size_t length;
+  LiteCommDictEntry entries[];
+};
+
+inline size_t
+GetByteLengthOfDictInstance(uint8_t receivedByte,
+                            const LiteCommDict* dict)
+{
+  uint8_t id = (receivedByte << 1);
+  id >> 1;
+  if(id < dict->length)
+    return dict->entries[id].length;
+  return 0;
+}
+
+inline const LiteCommDictEntry*
+GetDictEntryForTriggerProperty(rregistry::Bool triggerProperty,
+                               const LiteCommDict* dict)
+{
+  for(size_t i = 0; i < dict->length; ++i) {
+    const LiteCommDictEntry* entry = &dict->entries[i];
+    if(entry->trigger == triggerProperty)
+      return entry;
+  }
+  return nullptr;
+}
 }
 }
 

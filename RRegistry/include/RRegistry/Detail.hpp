@@ -409,6 +409,12 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Bool) = {
     false,
     false,
     true },
+  { "BRST_RBREAKOUT_MOVEMENT",
+    "Send movement updates as a burst package to RBReakout",
+    "",
+    false,
+    false,
+    true }
 };
 static constexpr EntryDetailLite
   StringDetail[static_cast<size_t>(String::_COUNT)] = {

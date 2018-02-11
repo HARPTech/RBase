@@ -106,6 +106,8 @@ enum class Bool
 
   MVMT_PARKBREAK = 3,
 
+  BRST_RBREAKOUT_MOVEMENT = 4,
+
   _COUNT
 };
 enum class String
