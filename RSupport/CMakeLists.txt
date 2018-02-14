@@ -15,7 +15,7 @@ set_property(TARGET rsupport PROPERTY CXX_STANDARD 14)
 
 set_property(TARGET rsupport PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(${INSTALL})
+if(INSTALL_RBASE)
 		include(GNUInstallDirs)
 
 		install(TARGETS rsupport
