@@ -186,7 +186,7 @@ LiteCommData::fromType(
 template<class Registry>
 inline void
 SetLiteCommDataToRegistry(rregistry::Type type,
-                          uint32_t property,
+                          uint16_t property,
                           const LiteCommData& data,
                           Registry registry)
 {
