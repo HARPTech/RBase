@@ -1,3 +1,18 @@
+#ifndef LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
+#define LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
+
+#include "LiteComm.hpp"
+
+namespace lrt {
+namespace rcomm {
+
+extern LiteCommDict LiteCommDict_RBreakout;
+
+}
+}
+
+#endif
+
 #ifdef LITECOMMDICT_RBREAKOUT_INIT
 namespace lrt {
 namespace rcomm {
@@ -32,20 +47,6 @@ LiteCommDict_RBreakout_Init()
 
   LiteCommDict_RBreakout.entries = entries;
 }
-}
-}
-
-#endif
-
-#ifndef LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
-#define LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
-
-#include "LiteComm.hpp"
-
-namespace lrt {
-namespace rcomm {
-
-extern LiteCommDict LiteCommDict_RBreakout;
 }
 }
 

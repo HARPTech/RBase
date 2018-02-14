@@ -296,8 +296,8 @@ struct LiteCommDict
 inline uint8_t
 GetDictIdOfDictInstance(uint8_t receivedByte)
 {
-  uint8_t id = (receivedByte << 1);
-  id = id >> 1;
+  uint8_t id = receivedByte;
+  id &= ~(1 << 7);
   return id;
 }
 
