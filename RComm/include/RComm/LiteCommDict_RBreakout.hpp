@@ -1,3 +1,18 @@
+#ifndef LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
+#define LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
+
+#include "LiteComm.hpp"
+
+namespace lrt {
+namespace rcomm {
+
+extern LiteCommDict LiteCommDict_RBreakout;
+
+}
+}
+
+#endif
+
 #ifdef LITECOMMDICT_RBREAKOUT_INIT
 namespace lrt {
 namespace rcomm {
@@ -27,23 +42,11 @@ LiteCommDict_RBreakout_Init()
 
   entries[0].handlers = handlers1;
   entries[0].length = 8;
+  entries[0].trigger = rregistry::Bool::BRST_RBREAKOUT_MOVEMENT;
+  entries[0].id = 0;
 
   LiteCommDict_RBreakout.entries = entries;
 }
-}
-}
-
-#endif
-
-#ifndef LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
-#define LRT_RCOMM_LITECOMMDICT_RBREAKOUT_HPP
-
-#include "LiteComm.hpp"
-
-namespace lrt {
-namespace rcomm {
-
-extern LiteCommDict LiteCommDict_RBreakout;
 }
 }
 

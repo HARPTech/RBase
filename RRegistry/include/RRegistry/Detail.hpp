@@ -310,6 +310,14 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint8) = {
     128,
     0,
     255 },
+  { "REGULATION_KERNEL_FREQUENCY",
+    "Frequency of the Regulation Kernel in Hz.",
+    "The frequency determines, how often the main loop in the regulation "
+    "kernel is run through in one second. Higher frequencies generally mean "
+    "higher accuracy but also higher system load.",
+    60,
+    0,
+    255 },
 };
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint16) = {
   { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FL",

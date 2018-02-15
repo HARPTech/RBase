@@ -1,7 +1,7 @@
 #ifndef LRT_RSUPPORT_PIPEADAPTER_HPP
 #define LRT_RSUPPORT_PIPEADAPTER_HPP
 
-#include "RSupport.h"
+#include "RSupport.hpp"
 #include <RRegistry/Registry.hpp>
 
 namespace lrt {
@@ -9,7 +9,7 @@ namespace rsupport {
 class PipeAdapter : public rregistry::Registry::Adapter
 {
   public:
-  PipeAdapter(std::shared_ptr<rregistry::Registry> registry);
+  PipeAdapter(std::shared_ptr<rregistry::Registry> registry, bool subscribedToAll = false);
   virtual ~PipeAdapter();
 
   virtual void send(const rregistry::Registry::Adapter::Message& msg) override;
@@ -27,6 +27,11 @@ class PipeAdapter : public rregistry::Registry::Adapter
 
   int inFd() { return m_in_fd; }
   int outFd() { return m_out_fd; }
+  void setInFd(int inFd) { m_in_fd = inFd; }
+  void setOutFd(int outFd) { m_out_fd = outFd; }
+
+  const std::string& inFifo() { return m_inFifo; }
+  const std::string& outFifo() { return m_outFifo; }
 
   private:
   rregistry::Registry::Adapter::Message m_message;

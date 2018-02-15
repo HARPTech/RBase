@@ -187,6 +187,9 @@ class LiteCommAdapter
                 message.setSingleBit(i + 8);
                 val = -val;
               }
+              // Stop overflow errors.
+              if(abs(val) > 255)
+                val = 255;
               message.buf[i + 2] = static_cast<uint8_t>(val);
               break;
             }

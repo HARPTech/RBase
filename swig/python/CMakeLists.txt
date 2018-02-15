@@ -16,7 +16,7 @@ set_property(SOURCE rsupport.i PROPERTY SWIG_MODULE_NAME RSupport)
 set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rsupportPYTHON_wrap.cxx PROPERTY SKIP_AUTOMOC ON)
 set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rregistryPYTHON_wrap.cxx PROPERTY SKIP_AUTOMOC ON)
 
-if(${INSTALL})
+if(INSTALL_RBASE)
 		install(FILES
 				${CMAKE_CURRENT_BINARY_DIR}/RRegistry.py
 				${CMAKE_CURRENT_BINARY_DIR}/_RRegistry.so

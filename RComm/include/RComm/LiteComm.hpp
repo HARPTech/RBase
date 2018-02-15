@@ -186,7 +186,7 @@ LiteCommData::fromType(
 template<class Registry>
 inline void
 SetLiteCommDataToRegistry(rregistry::Type type,
-                          uint32_t property,
+                          uint16_t property,
                           const LiteCommData& data,
                           Registry registry)
 {
@@ -296,8 +296,8 @@ struct LiteCommDict
 inline uint8_t
 GetDictIdOfDictInstance(uint8_t receivedByte)
 {
-  uint8_t id = (receivedByte << 1);
-  id = id >> 1;
+  uint8_t id = receivedByte;
+  id &= ~(1 << 7);
   return id;
 }
 

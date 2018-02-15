@@ -15,11 +15,14 @@ set_property(TARGET rsupport PROPERTY CXX_STANDARD 14)
 
 set_property(TARGET rsupport PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(${INSTALL})
+if(INSTALL_RBASE)
 		include(GNUInstallDirs)
 
 		install(TARGETS rsupport
 				RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 				LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 				ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/static)
+
+		install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/example/regulation-kernel.py
+				DESTINATION /usr/share/rbase/examples/)
 endif()
