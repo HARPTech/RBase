@@ -4,7 +4,7 @@
 #include <thread>
 
 #include "../include/RSupport/PipeAdapter.hpp"
-#include "../include/RSupport/RSupport.h"
+#include "../include/RSupport/RSupport.hpp"
 #include <RRegistry/Entries.hpp>
 
 const char* RSupportStatusNames[RSupportStatus__Count] = {

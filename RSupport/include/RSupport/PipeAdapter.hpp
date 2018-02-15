@@ -1,7 +1,7 @@
 #ifndef LRT_RSUPPORT_PIPEADAPTER_HPP
 #define LRT_RSUPPORT_PIPEADAPTER_HPP
 
-#include "RSupport.h"
+#include "RSupport.hpp"
 #include <RRegistry/Registry.hpp>
 
 namespace lrt {

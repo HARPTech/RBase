@@ -7,7 +7,7 @@
     #include <RComm/LiteComm.hpp>
     #include <RComm/LiteCommAdapter.hpp>
     #include <RRegistry/Registry.hpp>
-    #include <RSupport/RSupport.h>
+    #include <RSupport/RSupport.hpp>
     #include <RSupport/PipeAdapter.hpp>
     using namespace lrt;
     using namespace lrt::rregistry;
@@ -18,5 +18,5 @@
 
 %shared_ptr(rsupport::PipeAdapter)
 
-%include "../RSupport/include/RSupport/RSupport.h"
+%include "../RSupport/include/RSupport/RSupport.hpp"
 %include "../RSupport/include/RSupport/PipeAdapter.hpp"
