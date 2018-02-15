@@ -1,6 +1,24 @@
 #ifndef LRT_RCOMM_RCOMM_H
 #define LRT_RCOMM_RCOMM_H
 
+typedef enum RSupportStatus {
+  RSupportStatus_Ok,
+  RSupportStatus_CouldNotOpenFIFOs,
+  RSupportStatus_ConnectionFailed,
+  RSupportStatus_Updates,
+  RSupportStatus_IOError,
+  RSupportStatus_FIFONotOpenForReading,
+  RSupportStatus_OtherError,
+  RSupportStatus_InvalidOption,
+  RSupportStatus__Count
+} RSupportStatus;
+
+typedef enum RSupportOption {
+  RSupportOption_AutoFrequency,
+  RSupportOption_AutoMovementBurst,
+  RSupportOption__Count
+} RSupportOption;
+
 #ifdef __cplusplus
 
 // If C++ is used to compile the support library, the whole interface can be
@@ -13,10 +31,17 @@ class PipeAdapter;
 }
 
 #include <RRegistry/Registry.hpp>
+#include <bitset>
+#include <chrono>
+#include <memory>
 struct RSupportHandle
 {
   std::shared_ptr<lrt::rregistry::Registry> registry;
   std::shared_ptr<lrt::rsupport::PipeAdapter> adapter;
+  std::bitset<RSupportOption__Count> options;
+  std::chrono::system_clock::time_point frameStart =
+    std::chrono::system_clock::now();
+  uint64_t frameTime = 0;
 };
 
 extern "C" {
@@ -27,22 +52,32 @@ extern "C" {
 
 typedef struct RSupportHandle RSupportHandle;
 
-typedef enum RSupportStatus {
-  RSupportStatus_Ok,
-  RSupportStatus_CouldNotOpenFIFOs,
-  RSupportStatus_ConnectionFailed,
-  RSupportStatus_Updates,
-  RSupportStatus_IOError,
-  RSupportStatus_FIFONotOpenForReading,
-  RSupportStatus_OtherError,
-  RSupportStatus__Count
-} RSupportStatus;
-
 extern const char* RSupportDefaultFifoPath;
 
+/**
+ * @brief Converts the given status enum value to a string representation.
+ *
+ * @param status The status to convert.
+ * @return The name/description of the given status.
+ */
 const char*
 rsupport_status_msg(RSupportStatus status);
 
+/**
+ * @brief Converts the given option enum value to a string representation.
+ *
+ * @param option The option to convert.
+ * @return The name/description of the given option.
+ */
+const char*
+rsupport_option_msg(RSupportOption option);
+
+
+/**
+ * @brief Creates the handle and initializes all internal fields.
+ *
+ * @return The created handle. Caller is responsible for freeing the pointer using rsupport_handle_free().
+ */
 RSupportHandle*
 rsupport_handle_create();
 
@@ -60,6 +95,17 @@ rsupport_handle_disconnect(RSupportHandle* handle);
 
 RSupportStatus
 rsupport_handle_service(RSupportHandle* handle);
+
+RSupportStatus
+rsupport_handle_set_option(RSupportHandle* handle,
+                           RSupportOption option,
+                           bool state);
+
+uint32_t
+rsupport_handle_get_frame_time(RSupportHandle* handle);
+
+bool
+rsupport_handle_get_option(RSupportHandle* handle, RSupportOption option);
 
 // Registry Interface
 // ==================
@@ -199,6 +245,18 @@ class RSupport
   inline void unsubscribe(uint16_t type, uint16_t property)
   {
     rsupport_handle_unsubscribe(handle(), type, property);
+  }
+  inline RSupportStatus setOption(RSupportOption option, bool value)
+  {
+    return rsupport_handle_set_option(handle(), option, value);
+  }
+  inline bool getOption(RSupportOption option)
+  {
+    return rsupport_handle_get_option(handle(), option);
+  }
+  inline uint32_t getFrameTime()
+  {
+    return rsupport_handle_get_frame_time(handle());
   }
   inline RSupportStatus service() { return rsupport_handle_service(handle()); }
 
