@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 
 project(RBase
-		VERSION 0.3.0)
+		VERSION 0.4.0)
 
 set(BUILD_NUMBER "0" CACHE STRING "Build-Number")
 
@@ -13,13 +13,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(AdditionalCatchParameters -o report.xml -r junit)
 
+get_directory_property(hasParent PARENT_DIRECTORY)
 
-if(${hasParent})
+if(hasParent)
+		set(INSTALL_RBASE FALSE)
 else()
-		set(INSTALL ON)
+		set(INSTALL_RBASE TRUE)
 endif()
 
-if(${testing})
+if(testing)
 		enable_testing()
 endif()
 
@@ -38,15 +40,11 @@ add_subdirectory(RComm)
 add_subdirectory(RRegistry)
 add_subdirectory(RSupport)
 
-add_subdirectory(swig)
+if(INSTALL_RBASE)
+		add_subdirectory(swig)
+endif()
 
-get_directory_property(hasParent PARENT_DIRECTORY)
-
-if(${hasParent})
-		set(RRegistry_INCLUDE_DIRS
-				${RRegistry_INCLUDE_DIRS}
-				PARENT_SCOPE)
-else()
+if(INSTALL_RBASE)
 		# Installation logic, only executed if there is no parent!
 		set(CPACK_GENERATOR "DEB")
 
@@ -66,4 +64,8 @@ else()
 		set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
 
 		include(CPack)
+else()
+		set(RRegistry_INCLUDE_DIRS
+				${RRegistry_INCLUDE_DIRS}
+				PARENT_SCOPE)
 endif()
