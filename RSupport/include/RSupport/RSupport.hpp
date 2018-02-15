@@ -94,11 +94,12 @@ rsupport_option_msg(RSupportOption option);
 /**
  * @brief Creates the handle and initializes all internal fields.
  *
+ * @param subscribedToAll Subscribed to all registry values, useful for clients.
  * @return The created handle. Caller is responsible for freeing the pointer
  * using rsupport_handle_free().
  */
 RSupportHandle*
-rsupport_handle_create();
+rsupport_handle_create(bool subscribedToAll);
 
 /**
  * @brief Frees the handle created with rsupport_handle_create().
@@ -325,8 +326,8 @@ class RSupport
   typedef std::unique_ptr<RSupportHandle, RSupportStatus (*)(RSupportHandle*)>
     RSupportHandlePtr;
 
-  RSupport()
-    : m_handle(rsupport_handle_create(), &rsupport_handle_free)
+  RSupport(bool subscribedToAll = true)
+    : m_handle(rsupport_handle_create(subscribedToAll), &rsupport_handle_free)
   {
   }
   ~RSupport() {}

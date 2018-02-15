@@ -14,8 +14,9 @@ using std::endl;
 
 namespace lrt {
 namespace rsupport {
-PipeAdapter::PipeAdapter(std::shared_ptr<rregistry::Registry> registry)
-  : LiteCommAdapter(registry)
+PipeAdapter::PipeAdapter(std::shared_ptr<rregistry::Registry> registry,
+                         bool subscribedToAll)
+  : LiteCommAdapter(registry, subscribedToAll, nullptr, "PipeAdapter", 2)
   , m_messageIt(m_message.buf.begin())
 {
 }
