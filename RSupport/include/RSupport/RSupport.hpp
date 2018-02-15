@@ -341,7 +341,7 @@ class RSupport
   /**
    * @brief Forwards to rsupport_handle_connect().
    */
-  inline RSupportStatus connect(const char* path)
+  inline RSupportStatus connect(const char* path = nullptr)
   {
     return rsupport_handle_connect(handle(), path);
   }

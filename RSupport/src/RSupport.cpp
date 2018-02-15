@@ -107,7 +107,7 @@ rsupport_handle_service(RSupportHandle* handle)
 const char*
 getPipePath(const char* pipe)
 {
-  if(pipe == 0) {
+  if(pipe == nullptr || pipe == 0 || strcmp(pipe, "") == 0) {
     // Receive pipe path.
     const char* env_path = std::getenv("LRT_PIPE_PATH");
     if(env_path == 0) {
