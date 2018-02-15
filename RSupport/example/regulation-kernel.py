@@ -1,5 +1,7 @@
 import sys
 
+sys.path.append("/usr/local/share/python3/")
+
 import RRegistry as RR
 import RSupport as RS
 
@@ -8,7 +10,9 @@ rsupport = RS.RSupport()
 print("Created handle! Trying to connect")
 
 # Connect to default path.
-rsupport.connect()
+status = rsupport.connect("/tmp/lrt_pipe_path.pipe")
+if status != RS.RSupportStatus_Ok:
+    print("Error while connecting: " + RS.rsupport_status_msg(status))
 
 # After connecting, options can be set.
 
@@ -22,8 +26,8 @@ rsupport.setOption(RS.RSupportOption_AutoMovementBurst, True)
 registry = rsupport.registry()
 
 # Subscribe to inputs.
-registry.subscribe(RR.Type_Int16, RR.Int16_MVMT_STEER_DIRECTION)
-registry.subscribe(RR.Type_Int16, RR.Int16_MVMT_FORWARD_VELOCITY)
+rsupport.subscribe(RR.Type_Int16, RR.Int16_MVMT_STEER_DIRECTION)
+rsupport.subscribe(RR.Type_Int16, RR.Int16_MVMT_FORWARD_VELOCITY)
 
 # Start loop.
 while(True):

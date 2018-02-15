@@ -36,14 +36,14 @@ rsupport_option_msg(RSupportOption option)
 }
 
 RSupportHandle*
-rsupport_handle_create()
+rsupport_handle_create(bool subscribedToAll)
 {
   RSupportHandle* handle = new RSupportHandle();
 
   // Initiate other fields.
   handle->registry = std::make_shared<lrt::rregistry::Registry>();
-  handle->adapter =
-    std::make_shared<lrt::rsupport::PipeAdapter>(handle->registry);
+  handle->adapter = std::make_shared<lrt::rsupport::PipeAdapter>(
+    handle->registry, subscribedToAll);
 
   handle->registry->registerAdapter(handle->adapter);
 
