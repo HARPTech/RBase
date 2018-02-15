@@ -45,10 +45,10 @@ while(True):
     motor_rl = forward_velocity
     motor_rr = forward_velocity
 
-    servo_fl = steer_direction
-    servo_fr = steer_direction
-    servo_rl = steer_direction
-    servo_rr = steer_direction
+    servo_fl = abs(steer_direction)
+    servo_fr = abs(steer_direction)
+    servo_rl = abs(steer_direction)
+    servo_rr = abs(steer_direction)
 
     # Assign the calculated variables into the registry.
     registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_FL, motor_fl)
