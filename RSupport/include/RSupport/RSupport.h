@@ -34,6 +34,13 @@ class PipeAdapter;
 #include <bitset>
 #include <chrono>
 #include <memory>
+
+/**
+ * @brief The handle for a client or a server using the RSupport library.
+ *
+ * This handle holds all needed variables and can be used opaque to C++-isms
+ * using the provided C-API.
+ */
 struct RSupportHandle
 {
   std::shared_ptr<lrt::rregistry::Registry> registry;
@@ -52,6 +59,9 @@ extern "C" {
 
 typedef struct RSupportHandle RSupportHandle;
 
+/**
+ * @brief The default fifo path to use. Should not be overridden by clients.
+ */
 extern const char* RSupportDefaultFifoPath;
 
 /**
@@ -72,52 +82,146 @@ rsupport_status_msg(RSupportStatus status);
 const char*
 rsupport_option_msg(RSupportOption option);
 
-
 /**
  * @brief Creates the handle and initializes all internal fields.
  *
- * @return The created handle. Caller is responsible for freeing the pointer using rsupport_handle_free().
+ * @return The created handle. Caller is responsible for freeing the pointer
+ * using rsupport_handle_free().
  */
 RSupportHandle*
 rsupport_handle_create();
 
+/**
+ * @brief Frees the handle created with rsupport_handle_create().
+ *
+ * Internally also sets default options: RSupportOption_AutoFrequency and
+ * RSupportOption_AutoMovementBurst are both set to true.
+ *
+ * @param handle The handle to free.
+ * @return RSupportStatus_Ok on success.
+ */
 RSupportStatus
 rsupport_handle_free(RSupportHandle* handle);
 
+/**
+ * @brief Connect the handle to the given pipe-path.
+ *
+ * @param handle The handle to initiate the connection in.
+ * @param pipe The pipe to use. Can be an empty string or nullptr and will be
+ * assigned to a default location.
+ * @return RSupportStatus_Ok on success.
+ */
 RSupportStatus
 rsupport_handle_connect(RSupportHandle* handle, const char* pipe);
 
+/**
+ * @brief Create the host (initial fifo creation).
+ *
+ * @param handle The handle to use in the creation of the host.
+ * @param pipe The pipe to use. Can be an empty string or nullptr and will be
+ * assigned to a default location.
+ * @return RSupportStatus_Ok on success.
+ */
 RSupportStatus
 rsupport_handle_connect_create(RSupportHandle* handle, const char* pipe);
 
+/**
+ * @brief Disconnect from the server in a clean and orderly way.
+ *
+ * @param handle The handle to use while disconnecting.
+ * @return RSupportStatus_Ok on success.
+ */
 RSupportStatus
 rsupport_handle_disconnect(RSupportHandle* handle);
 
+/**
+ * @brief Service the handle, get new updates from the host and apply activated
+ * options.
+ *
+ * This function internally also detects the options
+ * RSupportOption_AutoMovementBurst and RSupportOption_AutoFrequency and applies
+ * the necessary actions, if they are active.
+ *
+ * @param handle The handle to service.
+ * @return RSupportStatus_Ok or RSupportStatus_Updates on success.
+ */
 RSupportStatus
 rsupport_handle_service(RSupportHandle* handle);
 
+/**
+ * @brief Sets the specified option applying to the behaviour of the RSupport
+ * library to the given value.
+ *
+ * These options mainly apply to the rsupport_handle_service() function, which
+ * changes according to active options on the given handle. Options can also be
+ * changed during run-time.
+ *
+ * @param handle The handle to set the option on.
+ * @param option The option to set.
+ * @param state The value for the option to be set to.
+ * @return RSupportStatus_Ok on success.
+ */
 RSupportStatus
 rsupport_handle_set_option(RSupportHandle* handle,
                            RSupportOption option,
                            bool state);
 
-uint32_t
-rsupport_handle_get_frame_time(RSupportHandle* handle);
-
+/**
+ * @brief Get the value of a given option in the specified handle.
+ *
+ * @param handle The handle to query.
+ * @param option The option to check.
+ * @return True if the option is active, false otherwise.
+ */
 bool
 rsupport_handle_get_option(RSupportHandle* handle, RSupportOption option);
+
+/**
+ * @brief Get the time it took for the last frame to complete.
+ *
+ * @param handle The handle to query.
+ * @return The time it took for the last frame to complete in nanoseconds.
+ */
+uint32_t
+rsupport_handle_get_frame_time(RSupportHandle* handle);
 
 // Registry Interface
 // ==================
 
+/**
+ * @brief Subscribe to a registry value.
+ *
+ * @param handle The handle to use.
+ * @param type The type of registry variable to subscribe.
+ * @param property The property to subscribe to.
+ */
 void
 rsupport_handle_subscribe(RSupportHandle* handle,
                           uint16_t type,
                           uint16_t property);
+
+/**
+ * @brief Unsubscribe from a registry value.
+ *
+ * @param handle The handle to use.
+ * @param type The type of registry variable to unsubscribe from.
+ * @param property The property to unsubscribe from.
+ */
 void
 rsupport_handle_unsubscribe(RSupportHandle* handle,
                             uint16_t type,
                             uint16_t property);
+
+/**
+ * @brief Request a registry value.
+ *
+ * The requested variable will be in the local copy of the registry after the
+ * next call to rsupport_handle_service().
+ *
+ * @param handle The handle to use.
+ * @param type The type of registry variable to request.
+ * @param property The property to request.
+ */
 void
 rsupport_handle_request(RSupportHandle* handle,
                         uint16_t type,
@@ -218,46 +322,80 @@ class RSupport
   }
   ~RSupport() {}
 
+  /**
+   * @brief Get the internal reference to the used RSupportHandle.
+   * @return RSupportHandle The internal handle.
+   */
   inline RSupportHandle* handle() { return m_handle.get(); }
   lrt::rregistry::Registry* registry() { return m_handle->registry.get(); }
 
+  /**
+   * @brief Forwards to rsupport_handle_connect().
+   */
   inline RSupportStatus connect(const char* path)
   {
     return rsupport_handle_connect(handle(), path);
   }
+  /**
+   * @brief Forwards to rsupport_handle_create().
+   */
   inline RSupportStatus create(const char* path)
   {
     return rsupport_handle_connect_create(handle(), path);
   }
+  /**
+   * @brief Forwards to rsupport_handle_disconnect().
+   */
   inline RSupportStatus disconnect()
   {
     return rsupport_handle_disconnect(handle());
   }
 
+  /**
+   * @brief Forwards to rsupport_handle_request().
+   */
   inline void request(uint16_t type, uint16_t property)
   {
     rsupport_handle_request(handle(), type, property);
   }
+  /**
+   * @brief Forwards to rsupport_handle_subscribe().
+   */
   inline void subscribe(uint16_t type, uint16_t property)
   {
     rsupport_handle_subscribe(handle(), type, property);
   }
+  /**
+   * @brief Forwards to rsupport_handle_subscribe().
+   */
   inline void unsubscribe(uint16_t type, uint16_t property)
   {
     rsupport_handle_unsubscribe(handle(), type, property);
   }
+  /**
+   * @brief Forwards to rsupport_handle_set_option().
+   */
   inline RSupportStatus setOption(RSupportOption option, bool value)
   {
     return rsupport_handle_set_option(handle(), option, value);
   }
+  /**
+   * @brief Forwards to rsupport_handle_get_option().
+   */
   inline bool getOption(RSupportOption option)
   {
     return rsupport_handle_get_option(handle(), option);
   }
+  /**
+   * @brief Forwards to rsupport_handle_get_frame_time().
+   */
   inline uint32_t getFrameTime()
   {
     return rsupport_handle_get_frame_time(handle());
   }
+  /**
+   * @brief Forwards to rsupport_handle_service().
+   */
   inline RSupportStatus service() { return rsupport_handle_service(handle()); }
 
   private:
