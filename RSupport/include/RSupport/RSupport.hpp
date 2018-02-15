@@ -1,6 +1,15 @@
 #ifndef LRT_RCOMM_RCOMM_H
 #define LRT_RCOMM_RCOMM_H
 
+/**
+ * @file RSupport.hpp
+ * @brief Functions and Classes for integrating a client Regulation Kernel into
+ * RMaster as separate process.
+ *
+ * The C-API is usable by all languages, while the C++ handle is internal only
+ * and also exposed with a SWIG bindings generator.
+ */
+
 typedef enum RSupportStatus {
   RSupportStatus_Ok,
   RSupportStatus_CouldNotOpenFIFOs,
