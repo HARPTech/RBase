@@ -318,6 +318,18 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint8) = {
     60,
     0,
     255 },
+  { "MVMT_SERVO_MAX_DELTA",
+    "Maximal change for servo position in one timestep.",
+    "",
+    5,
+    1,
+    30 },
+  { "MVMT_SERVO_MAX_VELOCITY",
+    "Maximal speed of servo position change.",
+    "",
+    20,
+    1,
+    50 },
 };
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint16) = {
   { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FL",

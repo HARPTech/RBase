@@ -68,6 +68,9 @@ enum class Uint8
   MVMT_SERVO_RR_POSITION = 7,
 
   REGULATION_KERNEL_FREQUENCY = 8,
+
+  MVMT_SERVO_MAX_DELTA = 9,
+  MVMT_SERVO_MAX_VELOCITY = 10,
   _COUNT
 };
 enum class Uint16
@@ -93,7 +96,7 @@ enum class Uint64
 enum class Float
 {
   MVMT_SPEED_MULTIPLIER = 0,///< Every movement gets multiplied by this factor.
-                             /// It defines the "responsiveness" of the device.
+                            /// It defines the "responsiveness" of the device.
   _COUNT
 };
 enum class Double
