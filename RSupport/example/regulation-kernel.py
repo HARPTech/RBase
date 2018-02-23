@@ -39,6 +39,18 @@ while(True):
     forward_velocity = registry.getInt16(RR.Int16_MVMT_FORWARD_VELOCITY)
     steer_direction = registry.getInt16(RR.Int16_MVMT_STEER_DIRECTION)
 
+    forward_velocity /= 128;
+    steer_direction /= 128;
+
+    if forward_velocity < -255:
+        forward_velocity = -255
+    if steer_direction < -255:
+        steer_direction = -255
+    if forward_velocity > 255:
+        forward_velocity = 255
+    if steer_direction > 255:
+        steer_direction = 255
+
     # Run the calculations.
     motor_fl = forward_velocity
     motor_fr = forward_velocity
