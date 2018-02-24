@@ -38,6 +38,10 @@ enum class Int16
   MVMT_MOTOR_PWM_FR = 3,
   MVMT_MOTOR_PWM_RL = 4,
   MVMT_MOTOR_PWM_RR = 5,
+  MVMT_SERVO_OUTPUT_PWM_FL = 6,
+  MVMT_SERVO_OUTPUT_PWM_FR = 7,
+  MVMT_SERVO_OUTPUT_PWM_RL = 8,
+  MVMT_SERVO_OUTPUT_PWM_RR = 9,
   _COUNT
 };
 enum class Int32
@@ -68,6 +72,9 @@ enum class Uint8
   MVMT_SERVO_RR_POSITION = 7,
 
   REGULATION_KERNEL_FREQUENCY = 8,
+
+  MVMT_SERVO_MAX_DELTA = 9,
+  MVMT_SERVO_MAX_VELOCITY = 10,
   _COUNT
 };
 enum class Uint16
@@ -93,7 +100,7 @@ enum class Uint64
 enum class Float
 {
   MVMT_SPEED_MULTIPLIER = 0,///< Every movement gets multiplied by this factor.
-                             /// It defines the "responsiveness" of the device.
+                            /// It defines the "responsiveness" of the device.
   _COUNT
 };
 enum class Double

@@ -39,16 +39,28 @@ while(True):
     forward_velocity = registry.getInt16(RR.Int16_MVMT_FORWARD_VELOCITY)
     steer_direction = registry.getInt16(RR.Int16_MVMT_STEER_DIRECTION)
 
+    forward_velocity /= 128;
+    steer_direction /= 128;
+
+    if forward_velocity < -255:
+        forward_velocity = -255
+    if steer_direction < -255:
+        steer_direction = -255
+    if forward_velocity > 255:
+        forward_velocity = 255
+    if steer_direction > 255:
+        steer_direction = 255
+
     # Run the calculations.
     motor_fl = forward_velocity
     motor_fr = forward_velocity
     motor_rl = forward_velocity
     motor_rr = forward_velocity
 
-    servo_fl = steer_direction
-    servo_fr = steer_direction
-    servo_rl = steer_direction
-    servo_rr = steer_direction
+    servo_fl = abs(steer_direction)
+    servo_fr = abs(steer_direction)
+    servo_rl = abs(steer_direction)
+    servo_rr = abs(steer_direction)
 
     # Assign the calculated variables into the registry.
     registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_FL, motor_fl)
