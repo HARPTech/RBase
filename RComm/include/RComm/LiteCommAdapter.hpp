@@ -521,6 +521,14 @@ class LiteCommAdapter
   const char* adapterName() { return m_adapterName; }
   int adapterId() { return m_adapterId; }
 
+  void remoteUnsubscribeFromAll() {
+    for(auto type : *m_subscriptions) {
+      for(auto entry : type) {
+        entry = false;
+      }
+    }
+  }
+
   protected:
   template<class TypeCategory>
   void setBack(TypeCategory property, LiteCommAdapter* self = nullptr)
