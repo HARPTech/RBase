@@ -21,9 +21,6 @@ else()
 		set(INSTALL_RBASE TRUE)
 endif()
 
-if(testing)
-		enable_testing()
-endif()
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,8 +30,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set (CMAKE_CXX_FLAGS "-std=gnu++14 ${CMAKE_CXX_FLAGS}")
 endif ()
 
-
-add_subdirectory(test)
+if(testing)
+		enable_testing()
+		add_subdirectory(test)
+endif()
 
 add_subdirectory(RComm)
 add_subdirectory(RRegistry)

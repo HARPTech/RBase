@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 
 #define LRT_RCOMM_LITECOMMADAPTER_PARSEMESSAGE_SET_CASE(CLASS)         \
@@ -208,8 +209,9 @@ class LiteCommAdapter
         m_acceptProperty = false;
         m_registry->set(static_cast<Bool>(property), false);
         m_acceptProperty = true;
+
+        return;
       }
-      return;
     }
 
     // Check if the property has been subscribed by the current adapter.
@@ -435,8 +437,8 @@ class LiteCommAdapter
           for(std::size_t i = 0; i < 8; ++i, ++it)
             (*str)[it] = lData.byte[i];
 #else
-          auto it = std::find(str[0], str[std::strlen(str)], '\0')
-            std::copy(lData.byte[0], lData.byte[sizeof(lData)], it);
+          auto it = std::find(str[0], str[std::strlen(str)], '\0');
+          std::copy(lData.byte[0], lData.byte[sizeof(lData)], it);
 #endif
         }
         break;

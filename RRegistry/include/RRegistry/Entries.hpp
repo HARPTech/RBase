@@ -24,7 +24,7 @@ enum class Type
   _COUNT
 };
 
-typedef uint32_t EntryID;
+typedef uint16_t EntryID;
 
 enum class Int8
 {
