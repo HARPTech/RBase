@@ -264,7 +264,7 @@ const uint8_t LiteCommCompact_Negative = (1 << 0);
 struct LiteCommDictEntryHandler
 {
   template<typename TypeCategory>
-  LiteCommDictEntryHandler(TypeCategory property)
+  explicit LiteCommDictEntryHandler(TypeCategory property)
   {
     propertyType = rregistry::GetEnumTypeOfEntryClass(property);
     prop = static_cast<uint16_t>(property);
