@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 
 project(RBase
-		VERSION 0.5.0)
+		VERSION 0.6.0)
 
 set(BUILD_NUMBER "0" CACHE STRING "Build-Number")
 
