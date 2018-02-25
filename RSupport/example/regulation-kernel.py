@@ -40,7 +40,7 @@ while(True):
     steer_direction = registry.getInt16(RR.Int16_MVMT_STEER_DIRECTION)
 
     forward_velocity /= 128;
-    steer_direction /= 128;
+    steer_direction /= 256;
 
     if forward_velocity < -255:
         forward_velocity = -255
@@ -52,23 +52,23 @@ while(True):
         steer_direction = 255
 
     # Run the calculations.
-    motor_fl = forward_velocity
-    motor_fr = forward_velocity
-    motor_rl = forward_velocity
-    motor_rr = forward_velocity
+    motor_fl = int(forward_velocity)
+    motor_fr = int(forward_velocity)
+    motor_rl = int(forward_velocity)
+    motor_rr = int(forward_velocity)
 
-    servo_fl = abs(steer_direction)
-    servo_fr = abs(steer_direction)
-    servo_rl = abs(steer_direction)
-    servo_rr = abs(steer_direction)
+    servo_fl = steer_direction + 128
+    servo_fr = steer_direction + 128
+    servo_rl = steer_direction + 128
+    servo_rr = steer_direction + 128
 
     # Assign the calculated variables into the registry.
-    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_FL, motor_fl)
-    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_FR, motor_fr)
-    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_RL, motor_rl)
-    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_RR, motor_rr)
+    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_FL, int(motor_fl))
+    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_FR, int(motor_fr))
+    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_RL, int(motor_rl))
+    registry.setInt16(RR.Int16_MVMT_MOTOR_PWM_RR, int(motor_rr))
 
-    registry.setUint8(RR.Uint8_MVMT_SERVO_FL_POSITION, servo_fl)
-    registry.setUint8(RR.Uint8_MVMT_SERVO_FR_POSITION, servo_fr)
-    registry.setUint8(RR.Uint8_MVMT_SERVO_RL_POSITION, servo_rl)
-    registry.setUint8(RR.Uint8_MVMT_SERVO_RR_POSITION, servo_rr)
+    registry.setUint8(RR.Uint8_MVMT_SERVO_FL_POSITION, int(servo_fl))
+    registry.setUint8(RR.Uint8_MVMT_SERVO_FR_POSITION, int(servo_fr))
+    registry.setUint8(RR.Uint8_MVMT_SERVO_RL_POSITION, int(servo_rl))
+    registry.setUint8(RR.Uint8_MVMT_SERVO_RR_POSITION, int(servo_rr))
