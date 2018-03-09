@@ -9,10 +9,13 @@ namespace rsupport {
 class PipeAdapter : public rregistry::Registry::Adapter
 {
   public:
-  PipeAdapter(std::shared_ptr<rregistry::Registry> registry, bool subscribedToAll = false);
+  PipeAdapter(std::shared_ptr<rregistry::Registry> registry,
+              bool subscribedToAll = false);
   virtual ~PipeAdapter();
 
-  virtual void send(const rregistry::Registry::Adapter::Message& msg) override;
+  virtual void send(
+    const rregistry::Registry::Adapter::Message& msg,
+    rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 
   /**
    * @brief Connects to the two fifos at the provided path.

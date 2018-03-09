@@ -55,11 +55,24 @@ class Registry
   template<class TypeCategory,
            typename ValueType =
              typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
-  inline void set(TypeCategory property, ValueType value)
+  inline void set(TypeCategory property, ValueType value, bool reliable)
+  {
+    if(reliable)
+      set(property, value, rcomm::DefaultReliability);
+    else
+      set(property, value, rcomm::BasicDelivery);
+  }
+
+  template<class TypeCategory,
+           typename ValueType =
+             typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
+  inline void set(TypeCategory property,
+                  ValueType value,
+                  rcomm::Reliability reliability = rcomm::DefaultReliability)
   {
     setToArray(property, value);
     for(auto adapter : m_adapters)
-      adapter->set(property, value);
+      adapter->set(property, value, reliability);
     for(auto receiver : m_receivers)
       receiver->onUpdate(GetEnumTypeOfEntryClass(property),
                          static_cast<uint16_t>(property));
@@ -68,9 +81,21 @@ class Registry
   template<class TypeCategory,
            typename ValueType =
              typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
-  inline void setIntProperty(int32_t intProperty, ValueType value)
+  inline void setIntProperty(
+    int32_t intProperty,
+    ValueType value,
+    rcomm::Reliability reliability = rcomm::DefaultReliability)
   {
-    set(static_cast<TypeCategory>(intProperty), value);
+    set(static_cast<TypeCategory>(intProperty), value, reliability);
+  }
+  template<class TypeCategory,
+           typename ValueType =
+             typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type>
+  inline void setIntPropertyBooleanReliability(int32_t intProperty,
+                                               ValueType value,
+                                               bool reliable)
+  {
+    set(static_cast<TypeCategory>(intProperty), value, reliable);
   }
 
   template<class TypeCategory,

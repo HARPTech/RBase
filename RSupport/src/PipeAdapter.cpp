@@ -23,7 +23,8 @@ PipeAdapter::PipeAdapter(std::shared_ptr<rregistry::Registry> registry,
 PipeAdapter::~PipeAdapter() {}
 
 void
-PipeAdapter::send(const rregistry::Registry::Adapter::Message& msg)
+PipeAdapter::send(const rregistry::Registry::Adapter::Message& msg,
+                  rcomm::Reliability reliability)
 {
   write(m_out_fd, static_cast<const void*>(&msg.buf[0]), msg.length());
 }

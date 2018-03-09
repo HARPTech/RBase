@@ -21,6 +21,20 @@
 namespace lrt {
 namespace rcomm {
 
+enum Reliability
+{
+  BasicDelivery = (1 << 0),
+  Ordered = (1 << 1),
+  Acknowledged = (1 << 2)
+};
+inline Reliability
+operator|(Reliability a, Reliability b)
+{
+  return static_cast<Reliability>(static_cast<int>(a) | static_cast<int>(b));
+}
+const Reliability DefaultReliability =
+  Reliability::Ordered | Reliability::Acknowledged;
+
 template<class RegistryClass>
 class LiteCommAdapter
 {
@@ -139,12 +153,14 @@ class LiteCommAdapter
    * implementations have to do to be able to send messages is to implement the
    * transmission of Message structs for the length Message::length()
    */
-  virtual void send(const Message& msg) = 0;
+  virtual void send(const Message& msg,
+                    const Reliability = DefaultReliability) = 0;
 
   template<class TypeCategory>
   void set(
     TypeCategory property,
-    typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value)
+    typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value,
+    Reliability reliability = DefaultReliability)
   {
     using namespace rcomm;
     using namespace rregistry;
@@ -203,7 +219,7 @@ class LiteCommAdapter
         message.explicit_length = entry->length + 2;
 
         // Message is ready to be sent!
-        send(message);
+        send(message, reliability);
 
         // Set the burst request to false.
         m_acceptProperty = false;
@@ -237,7 +253,7 @@ class LiteCommAdapter
     for(size_t i = 0; i < 8; ++i)
       (*it++) = lData.byte[i];
 
-    send(message);
+    send(message, reliability);
 
     // Check if the message is a string and handle the string uniquely.
     if(type == rregistry::Type::String) {
@@ -250,7 +266,7 @@ class LiteCommAdapter
 
         LiteCommData::fromType(lData, value, i + 1);
 
-        append(property, lData);
+        append(property, lData, reliability);
 
         for(std::size_t n = 0; n < sizeof(LiteCommData); ++n)
           lData.byte[n] = '\n';
@@ -362,7 +378,9 @@ class LiteCommAdapter
                                    [static_cast<uint32_t>(property)];
   }
   template<typename TypeCategory>
-  inline void append(TypeCategory property, const LiteCommData& data)
+  inline void append(TypeCategory property,
+                     const LiteCommData& data,
+                     Reliability reliability = DefaultReliability)
   {
     using namespace rcomm;
 
@@ -385,7 +403,7 @@ class LiteCommAdapter
     for(size_t i = 0; i < 8; ++i)
       (*it++) = data.byte[i];
 
-    send(message);
+    send(message, reliability);
   }
 
   void parseMessage(const Message& msg)
@@ -521,7 +539,8 @@ class LiteCommAdapter
   const char* adapterName() { return m_adapterName; }
   int adapterId() { return m_adapterId; }
 
-  void remoteUnsubscribeFromAll() {
+  void remoteUnsubscribeFromAll()
+  {
     for(auto type : *m_subscriptions) {
       for(auto entry : type) {
         entry = false;

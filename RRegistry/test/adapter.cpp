@@ -18,10 +18,12 @@ class Adapter : public Registry::Adapter
   public:
   Adapter(std::shared_ptr<Registry> registry, bool subscribed = false)
     : Registry::Adapter(registry, subscribed)
-  {}
+  {
+  }
   ~Adapter() {}
 
-  virtual void send(const Message& msg)
+  virtual void send(const Message& msg,
+                    rcomm::Reliability = rcomm::DefaultReliability)
   {
     /*
 
