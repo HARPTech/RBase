@@ -590,7 +590,7 @@ inline std::size_t
 GetContinuousNumberFromPropertyType(Type type, uint32_t property)
 {
   std::size_t i = 0;
-  while(property != NormalizeContinousNumber(i) &&
+  while(property != NormalizeContinousNumber(i) ||
         type != GetTypeFromContinousNumber(i)) {
     ++i;
   }
