@@ -7,9 +7,11 @@
 #include <RRegistry/TypeConverter.hpp>
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <sstream>
 
 #define LRT_RCOMM_LITECOMMADAPTER_PARSEMESSAGE_SET_CASE(CLASS)         \
   case rregistry::Type::CLASS:                                         \
@@ -34,6 +36,13 @@ operator|(Reliability a, Reliability b)
 }
 const Reliability DefaultReliability =
   Reliability::Ordered | Reliability::Acknowledged;
+
+enum MessageParseError
+{
+  Success,
+  MessageTypeInvalid,
+  RegistryTypeInvalid,
+};
 
 template<class RegistryClass>
 class LiteCommAdapter
@@ -107,6 +116,16 @@ class LiteCommAdapter
     {
       uint8_t& byte = buf[bit / 8];
       byte |= (1 << (7 - (bit % 8)));
+    }
+
+    std::stringstream print()
+    {
+      std::stringstream outStream;
+      for(auto byte = buf.begin(); byte != buf.begin() + length(); ++byte) {
+        std::bitset<8> bits(*byte);
+        outStream << "  " << bits << "\n";
+      }
+      return outStream;
     }
   };
 
@@ -406,14 +425,14 @@ class LiteCommAdapter
     send(message, reliability);
   }
 
-  void parseMessage(const Message& msg)
+  MessageParseError parseMessage(const Message& msg)
   {
     using namespace rcomm;
     auto it = msg.begin();
 
     rregistry::Type type = static_cast<rregistry::Type>(*it++);
     if(type >= rregistry::Type::_COUNT)
-      return;
+      return MessageTypeInvalid;
 
     thread_local LiteCommProp lProp;
     thread_local LiteCommData lData;
@@ -423,7 +442,7 @@ class LiteCommAdapter
       lProp.byte[i] = (*it++);
 
     if(lProp.property >= rregistry::GetEntryCount(type))
-      return;
+      return RegistryTypeInvalid;
 
     switch(msg.lType()) {
       case LiteCommType::Update:
@@ -515,9 +534,10 @@ class LiteCommAdapter
         break;
       default:
         // Type not supported or invalid.
-        return;
+        return MessageTypeInvalid;
     }
     callMessageCallback(msg.lType(), type, lProp.property);
+    return Success;
   }
 
   void setMessageCallback(LiteCommType type, MsgCallback cb)
