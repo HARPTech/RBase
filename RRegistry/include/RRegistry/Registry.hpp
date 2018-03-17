@@ -29,7 +29,6 @@ class Registry
   ~Registry() {}
 
   using Adapter = rcomm::LiteCommAdapter<Registry>;
-
   using AdapterPtr = std::shared_ptr<Adapter>;
 
   // The receivers are a collection of raw pointers to make easy registering

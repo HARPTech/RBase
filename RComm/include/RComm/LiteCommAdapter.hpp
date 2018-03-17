@@ -2,6 +2,7 @@
 #define LRT_RCOMM_LITECOMMADAPTER_HPP
 
 #include "LiteComm.hpp"
+#include "LiteCommDropper.hpp"
 #include "LiteCommMessage.hpp"
 #include "LiteCommReliability.hpp"
 #include <RRegistry/DebuggingDataStore.hpp>
@@ -31,17 +32,8 @@ enum MessageParseError
   RegistryTypeInvalid,
 };
 
-class LiteCommDropperNoPolicy
-{
-  protected:
-  LiteCommDropperNoPolicy() {}
-  ~LiteCommDropperNoPolicy() {}
-
-  bool shouldBeDropped(const LiteCommMessage& message) { return false; }
-};
-
-template<class RegistryClass, class DropperPolicy = LiteCommDropperNoPolicy>
-class LiteCommAdapter : public DropperPolicy
+template<class RegistryClass>
+class LiteCommAdapter
 {
   public:
   using Message = LiteCommMessage;
@@ -80,6 +72,11 @@ class LiteCommAdapter : public DropperPolicy
   {
   }
   ~LiteCommAdapter() {}
+
+  void setDropperPolicy(LiteCommDropperPolicyPtr policy)
+  {
+    m_dropperPolicy = std::move(policy);
+  };
 
   /**
    * @brief Sends the message over the transmission method implemented by child
@@ -217,8 +214,6 @@ class LiteCommAdapter : public DropperPolicy
     m_sendMessage.setType(GetEnumTypeOfEntryClass(property));
     m_sendMessage.setProperty(
       static_cast<decltype(LiteCommProp::property)>(property));
-
-    send(m_sendMessage, reliability);
   }
 
   template<typename TypeCategory>
@@ -335,7 +330,7 @@ class LiteCommAdapter : public DropperPolicy
     if(type >= rregistry::Type::_COUNT)
       return MessageTypeInvalid;
 
-    if(this->shouldBeDropped(msg)) {
+    if(m_dropperPolicy && m_dropperPolicy->shouldBeDropped(msg)) {
       return MessageDropped;
     }
 
@@ -497,6 +492,8 @@ class LiteCommAdapter : public DropperPolicy
   MsgCallback m_messageCallback[static_cast<size_t>(LiteCommType::_COUNT)] = {
     nullptr
   };
+
+  LiteCommDropperPolicyPtr m_dropperPolicy;
 };
 }
 }

@@ -14,10 +14,7 @@ using namespace lrt::rregistry;
 
 const int checkValue = 100;
 
-using LossyAdapter = rcomm::LiteCommAdapter<rregistry::Registry,
-                                            rcomm::LiteCommDropperLossyPolicy>;
-
-class Adapter : public LossyAdapter
+class Adapter : public rregistry::Registry::Adapter
 {
   public:
   Adapter(std::shared_ptr<Registry> registry, bool subscribed = false)

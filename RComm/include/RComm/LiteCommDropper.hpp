@@ -3,17 +3,29 @@
 
 #include "LiteCommMessage.hpp"
 #include <RRegistry/SubscriptionMap.hpp>
+#include <memory>
 
 namespace lrt {
 namespace rcomm {
 
-class LiteCommDropperLossyPolicy
+class LiteCommDropperPolicy
 {
-  protected:
-  LiteCommDropperLossyPolicy() {}
-  ~LiteCommDropperLossyPolicy() {}
+  public:
+  LiteCommDropperPolicy() {}
+  virtual ~LiteCommDropperPolicy() {}
 
-  bool shouldBeDropped(const LiteCommMessage& message)
+  virtual bool shouldBeDropped(const LiteCommMessage& message) { return false; }
+};
+
+using LiteCommDropperPolicyPtr = std::unique_ptr<LiteCommDropperPolicy>;
+
+class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
+{
+  public:
+  LiteCommDropperLossyPolicy() {}
+  virtual ~LiteCommDropperLossyPolicy() {}
+
+  virtual bool shouldBeDropped(const LiteCommMessage& message)
   {
     switch(message.lType()) {
       case LiteCommType::Lossy: {
