@@ -7,6 +7,7 @@
 #include "RegistryReceiver.hpp"
 #include "TypeConverter.hpp"
 #include <RComm/LiteCommAdapter.hpp>
+#include <RComm/LiteCommReliability.hpp>
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -27,8 +28,9 @@ class Registry
   Registry() { initDefaults(); }
   ~Registry() {}
 
-  typedef rcomm::LiteCommAdapter<Registry> Adapter;
-  typedef std::shared_ptr<Adapter> AdapterPtr;
+  using Adapter = rcomm::LiteCommAdapter<Registry>;
+
+  using AdapterPtr = std::shared_ptr<Adapter>;
 
   // The receivers are a collection of raw pointers to make easy registering
   // easier to do. For example in class constructors and destructors.

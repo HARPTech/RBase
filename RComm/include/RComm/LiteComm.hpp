@@ -221,6 +221,7 @@ enum class LiteCommType
   Unsubscribe,
   Append,
   Debug,
+  Lossy,
 
   _COUNT
 };
@@ -241,22 +242,42 @@ GetNameOfLiteCommType(LiteCommType type)
       return "Append";
     case LiteCommType::Debug:
       return "Debug";
+    case LiteCommType::Lossy:
+      return "Lossy";
     default:
       return "Unknown";
   }
 }
 
-union LiteCommProp
+template<typename Type>
+union LiteCommNumber
 {
-  uint16_t property;
-  uint8_t byte[2];
+  // Several names are possible.
+  Type n;
+  Type property;
+  Type pos;
+  Type id;
+  uint8_t byte[sizeof(Type)];
+
+  template<typename It>
+  inline Type read(It begin)
+  {
+    for(size_t i = 0; i < sizeof(Type); ++i)
+      byte[i] = (*begin++);
+    return n;
+  }
+  template<typename It>
+  inline void write(It begin)
+  {
+    for(size_t i = 0; i < sizeof(Type); ++i)
+      (*begin++) = byte[i];
+  }
 };
 
-union LiteCommDebugPos
-{
-  uint32_t pos;
-  uint8_t byte[4];
-};
+typedef LiteCommNumber<uint16_t> LiteCommProp;
+typedef LiteCommNumber<uint16_t> LiteCommClientId;
+typedef LiteCommNumber<uint16_t> LiteCommSequentNumber;
+typedef LiteCommNumber<uint32_t> LiteCommDebugPos;
 
 const uint8_t LiteCommCompact_Positive = (0 << 0);
 const uint8_t LiteCommCompact_Negative = (1 << 0);
@@ -284,13 +305,13 @@ struct LiteCommDictEntry
    *
    * The entries define the properties to be sent according to this dictionary.
    */
-  LiteCommDictEntryHandler *handlers;
+  LiteCommDictEntryHandler* handlers;
 };
 struct LiteCommDict
 {
   const char* name;
   size_t length;
-  LiteCommDictEntry *entries;
+  LiteCommDictEntry* entries;
 };
 
 inline uint8_t

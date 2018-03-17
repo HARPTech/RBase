@@ -9,16 +9,19 @@
 
 namespace lrt {
 namespace rregistry {
+template<typename Store = bool>
 using SubscriptionMap =
-  std::array<std::vector<bool>, static_cast<std::size_t>(Type::_COUNT)>;
+  std::array<std::vector<Store>, static_cast<std::size_t>(Type::_COUNT)>;
 
-inline std::unique_ptr<SubscriptionMap>
-InitSubscriptionMap(bool subscribed = false)
+template<typename Store = bool>
+inline std::unique_ptr<SubscriptionMap<Store>>
+InitSubscriptionMap(Store defaultValue = false)
 {
-  std::unique_ptr<SubscriptionMap> subscriptions =
-    std::make_unique<SubscriptionMap>();
+  std::unique_ptr<SubscriptionMap<Store>> subscriptions =
+    std::make_unique<SubscriptionMap<Store>>();
   for(std::size_t i = 0; i < subscriptions->size(); ++i) {
-    (*subscriptions)[i].assign(GetEntryCount(static_cast<Type>(i)), subscribed);
+    (*subscriptions)[i].assign(GetEntryCount(static_cast<Type>(i)),
+                               defaultValue);
   }
   return subscriptions;
 }

@@ -6,6 +6,10 @@ add_subdirectory(test)
 
 add_library(rsupport SHARED ${SRCS})
 
+set_target_properties(rsupport PROPERTIES
+    CXX_STANDARD_REQUIRED 14
+    CXX_EXTENSIONS OFF)
+
 target_link_libraries(rsupport rcomm)
 target_link_libraries(rsupport rregistry)
 
