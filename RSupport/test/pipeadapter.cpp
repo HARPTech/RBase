@@ -26,7 +26,14 @@ TEST_CASE("rsupport::PipeAdapter transmissions working.",
 
   status = adapter1->create(queues.c_str());
   REQUIRE(status == RSupportStatus_Ok);
+
+  REQUIRE(adapter1->inFd() > 0);
+
   status = adapter2->connect(queues.c_str());
+
+  REQUIRE(adapter2->outFd() > 0);
+  REQUIRE(adapter2->inFd() > 0);
+
   REQUIRE(status == RSupportStatus_Ok);
 
   status = adapter1->service();
@@ -34,9 +41,6 @@ TEST_CASE("rsupport::PipeAdapter transmissions working.",
   status = adapter2->service();
   REQUIRE(status == RSupportStatus_Ok);
 
-  REQUIRE(adapter1->inFd() > 0);
-  REQUIRE(adapter2->inFd() > 0);
-  REQUIRE(adapter2->outFd() > 0);
   REQUIRE(adapter1->outFd() > 0);
 
   const int16_t compare = 10;

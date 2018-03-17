@@ -214,6 +214,8 @@ class LiteCommAdapter
     m_sendMessage.setType(GetEnumTypeOfEntryClass(property));
     m_sendMessage.setProperty(
       static_cast<decltype(LiteCommProp::property)>(property));
+
+    send(m_sendMessage, reliability);
   }
 
   template<typename TypeCategory>
