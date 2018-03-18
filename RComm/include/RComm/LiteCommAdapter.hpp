@@ -14,13 +14,6 @@
 #include <cstring>
 #include <memory>
 
-#define LRT_RCOMM_LITECOMMADAPTER_PARSEMESSAGE_SET_CASE(CLASS)         \
-  case rregistry::Type::CLASS:                                         \
-    if(lProp.property < static_cast<size_t>(rregistry::CLASS::_COUNT)) \
-      m_registry->set(static_cast<rregistry::CLASS>(lProp.property),   \
-                      lData.CLASS);                                    \
-    break;
-
 namespace lrt {
 namespace rcomm {
 
@@ -339,6 +332,10 @@ class LiteCommAdapter
     thread_local LiteCommData lData;
     thread_local LiteCommDebugPos lDebugPos;
 
+    uint16_t clientId = m_adapterId;
+    if(msg.lType() == LiteCommType::Lossy)
+      clientId = msg.getClientId();
+
     uint16_t property = msg.getProperty();
 
     if(property >= rregistry::GetEntryCount(type))
@@ -356,6 +353,13 @@ class LiteCommAdapter
         m_acceptProperty = false;
         SetLiteCommDataToRegistry(type, property, lData, m_registry);
         m_acceptProperty = true;
+
+        // If there is a consistency policy in place, write the new value
+        // into that.
+        if(m_registry->m_consistencyPolicy) {
+          m_registry->m_consistencyPolicy->push(
+            clientId, type, property, lData);
+        }
 
         // There was a set (= update), so the internal debugging state has to
         // be updated to reflect this change.

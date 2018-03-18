@@ -1,6 +1,7 @@
 #ifndef LRT_RREGISTRY_REGISTRY_HPP
 #define LRT_RREGISTRY_REGISTRY_HPP
 
+#include "PersistencyPolicy.hpp"
 #include "DebuggingDataStore.hpp"
 #include "Detail.hpp"
 #include "Entries.hpp"
@@ -136,6 +137,11 @@ class Registry
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
+  void setConsistencyPolicy(PersistencyPolicyPtr consistencyPolicy)
+  {
+    m_consistencyPolicy = std::move(consistencyPolicy);
+  }
+
 // The following declaration is not supported by swig and therefore it is
 // commented out in the swig source generation. It is not important though,
 // because the external API does not need this bit.
@@ -150,6 +156,9 @@ class Registry
   template<typename TypeCategory>
   inline typename GetValueTypeOfEntryClass<TypeCategory>::type* getPtrFromArray(
     TypeCategory property);
+
+  protected:
+  PersistencyPolicyPtr m_consistencyPolicy;
 
   private:
   std::vector<AdapterPtr> m_adapters;
