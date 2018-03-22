@@ -217,14 +217,14 @@ struct LiteCommMessage
     byte |= (1 << (7 - (bit % 8)));
   }
 
-  std::stringstream print() const
+  std::string print() const
   {
     std::stringstream outStream;
     for(auto byte = buf.begin(); byte != buf.begin() + length(); ++byte) {
       std::bitset<8> bits(*byte);
       outStream << "  " << bits << "\n";
     }
-    return outStream;
+    return outStream.str();
   }
 };
 }
