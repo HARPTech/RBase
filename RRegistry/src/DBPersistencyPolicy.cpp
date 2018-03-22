@@ -3,8 +3,8 @@
 #include <RRegistry/Detail.hpp>
 #include <RRegistry/Entries.hpp>
 #include <RRegistry/TypeConverter.hpp>
+#include <ctime>
 #include <functional>
-#include <iomanip>
 #include <iostream>
 #include <sqlite3.h>
 #include <sstream>
@@ -87,15 +87,18 @@ DBPersistencyPolicy::start(std::string dbFile)
   if(dbFile == "") {
     // New files should be named after the current datetime and reside in
     // ~/public_html for easy access.
-    auto t = std::time(nullptr);
-    auto tm = *std::localtime(&t);
-    std::stringstream file;
+    time_t rawtime;
+    struct tm* timeinfo;
+    char buffer[100];
 
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(
+      buffer, sizeof(buffer), "RegistryDump_%Y-%m-%d_%H-%M-%S.db", timeinfo);
     std::string homedir = getenv("HOME");
 
-    file << homedir << "/public_html/"
-         << std::put_time(&tm, "RegistryDump_%Y-%m-%d_%H-%M-%S.db");
-    dbFile = file.str();
+    dbFile = homedir + "/public_html/" + std::string(buffer);
   }
   m_dbFile = dbFile;
 
