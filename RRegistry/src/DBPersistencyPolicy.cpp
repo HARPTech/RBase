@@ -97,76 +97,7 @@ DBPersistencyPolicy::start(std::string dbFile)
          << std::put_time(&tm, "RegistryDump_%Y-%m-%d_%H-%M-%S.db");
     dbFile = file.str();
   }
-  int rc = 0;
-  sqlite3* db = nullptr;
-  char* err = nullptr;
-
-  rc = sqlite3_open(dbFile.c_str(), &db);
-  if(rc) {
-    cout << "[DBPersistencyPolicy] Could not open database file \"" << dbFile
-         << "\"! Error: " << sqlite3_errmsg(db) << endl;
-    sqlite3_close(db);
-    return;
-  }
-  m_db.reset(db);
-
-  {
-    std::string statement =
-      "CREATE TABLE IF NOT EXISTS general (key VARCHAR(20) "
-      "PRIMARY KEY, value TEXT)";
-
-    rc = sqlite3_exec(
-      db,
-      statement.c_str(),
-      [](void* data, int columns, char** values, char** names) { return 0; },
-      nullptr,
-      &err);
-    if(rc) {
-      cout << "[DBPersistencyPolicy] Could not create table general! Error: "
-           << err << endl;
-    }
-  }
-  for(size_t i = 0; i < static_cast<size_t>(rregistry::Type::_COUNT); ++i) {
-    auto detail = rregistry::GetTypeDetail(static_cast<rregistry::Type>(i));
-    std::string name = detail.name;
-    std::string typeCategory = detail.sqlType;
-
-    std::string statement = "CREATE TABLE IF NOT EXISTS sets" + name +
-                            " ( clientId INTEGER, property INTEGER,  "
-                            "timestamp BIGINT, value " +
-                            typeCategory + ");";
-
-    rc = sqlite3_exec(
-      db,
-      statement.c_str(),
-      [](void* data, int columns, char** values, char** names) { return 0; },
-      nullptr,
-      &err);
-    if(rc) {
-      cout << "[DBPersistencyPolicy] Could not create table sets" << name
-           << "! Error: " << err << endl;
-    }
-  }
-
-  // Create prepared statements for every possible type.
-  for(size_t i = 0; i < static_cast<size_t>(rregistry::Type::_COUNT); ++i) {
-    std::string statement = "INSERT INTO sets";
-    // Add the name of the current type for the correct table.
-    statement += rregistry::GetTypeDetail(static_cast<rregistry::Type>(i)).name;
-
-    // Add the rest of the insert statement. The type is not needed because
-    // that information is contained in the table.
-    statement += " (clientId, property, timestamp, value) VALUES (?1, ?2, ?3, "
-                 "?4);";
-
-    m_stmtInsertSet[i] = prepareStatement(statement);
-  }
-
-  m_controlStatements[0] = prepareStatement("BEGIN TRANSACTION;");
-  m_controlStatements[1] = prepareStatement("COMMIT;");
-
-  if(err)
-    sqlite3_free(err);
+  m_dbFile = dbFile;
 
   // Start the worker.
   m_stop = false;
@@ -225,8 +156,116 @@ DBPersistencyPolicy::push(uint16_t clientId,
 void
 DBPersistencyPolicy::run()
 {
-  cout << "[DBPersistencyPolicy] Worker started." << endl;
   m_running = true;
+  cout << "[DBPersistencyPolicy] Worker started. Generating Database." << endl;
+  {
+    int rc = 0;
+    sqlite3* db = nullptr;
+    char* err = nullptr;
+
+    rc = sqlite3_open(m_dbFile.c_str(), &db);
+    if(rc) {
+      cout << "[DBPersistencyPolicy] Could not open database file \""
+           << m_dbFile << "\"! Error: " << sqlite3_errmsg(db) << endl;
+      sqlite3_close(db);
+      return;
+    }
+    m_db.reset(db);
+
+    {
+      std::string statement = "CREATE TABLE IF NOT EXISTS general (key TEXT "
+                              "PRIMARY KEY, value TEXT)";
+
+      rc = sqlite3_exec(
+        db,
+        statement.c_str(),
+        [](void* data, int columns, char** values, char** names) { return 0; },
+        nullptr,
+        &err);
+      if(rc) {
+        cout << "[DBPersistencyPolicy] Could not create table general! Error: "
+             << err << endl;
+      }
+    }
+    for(size_t i = 0; i < static_cast<size_t>(rregistry::Type::_COUNT); ++i) {
+      auto detail = rregistry::GetTypeDetail(static_cast<rregistry::Type>(i));
+      std::string name = detail.name;
+      std::string typeCategory = detail.sqlType;
+
+      std::string statement = "CREATE TABLE IF NOT EXISTS sets" + name +
+                              " ( clientId INTEGER, property INTEGER,  "
+                              "timestamp BIGINT, value " +
+                              typeCategory + ");";
+
+      rc = sqlite3_exec(
+        db,
+        statement.c_str(),
+        [](void* data, int columns, char** values, char** names) { return 0; },
+        nullptr,
+        &err);
+      if(rc) {
+        cout << "[DBPersistencyPolicy] Could not create table sets" << name
+             << "! Error: " << err << endl;
+      }
+    }
+
+    // Create prepared statements for every possible type.
+    for(size_t i = 0; i < static_cast<size_t>(rregistry::Type::_COUNT); ++i) {
+      std::string statement = "INSERT INTO sets";
+      // Add the name of the current type for the correct table.
+      statement +=
+        rregistry::GetTypeDetail(static_cast<rregistry::Type>(i)).name;
+
+      // Add the rest of the insert statement. The type is not needed because
+      // that information is contained in the table.
+      statement +=
+        " (clientId, property, timestamp, value) VALUES (?1, ?2, ?3, "
+        "?4);";
+
+      m_stmtInsertSet[i] = prepareStatement(statement);
+    }
+
+    m_controlStatements[0] = prepareStatement("BEGIN TRANSACTION;");
+    m_controlStatements[1] = prepareStatement("COMMIT;");
+
+    if(err)
+      sqlite3_free(err);
+  }
+  {
+    // Insert general data.
+    auto addProperty =
+      prepareStatement("INSERT INTO general (key, value) VALUES (?1, ?2)");
+    auto StmtPtr = addProperty.get();
+
+    // Registry variables.
+    beginTransaction();
+    for(std::size_t type = 0; type < static_cast<std::size_t>(Type::_COUNT);
+        ++type) {
+      for(std::size_t property = 0;
+          property < GetEntryCount(static_cast<Type>(type));
+          ++property) {
+        // Type::Name - ID
+
+        std::string key = GetTypeDetail(static_cast<Type>(type)).name;
+        key += "::";
+        key += GetNameOfEntryClass(static_cast<Type>(type), property);
+        std::string value;
+
+        sqlite3_bind_text(
+          StmtPtr, 1, key.c_str(), key.length(), SQLITE_TRANSIENT);
+
+        value = std::to_string(property);
+        sqlite3_bind_text(
+          StmtPtr, 2, value.c_str(), value.length(), SQLITE_TRANSIENT);
+        sqlite3_step(StmtPtr);
+        sqlite3_reset(StmtPtr);
+      }
+    }
+    {
+      // TODO: Client list
+    }
+    commit();
+  }
   while(!m_stop) {
     std::unique_lock<std::mutex> lock(m_queueMutex);
     m_queueFullCondition.wait(lock);

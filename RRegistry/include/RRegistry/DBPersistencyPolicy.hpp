@@ -74,6 +74,8 @@ class DBPersistencyPolicy : public PersistencyPolicy
   std::vector<Sqlite3StmtPtr> m_controlStatements;
 
   std::thread m_workerThread;
+
+  std::string m_dbFile;
 };
 }
 }
