@@ -110,7 +110,8 @@ LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, LRT_STRING_TYPE)
 
 #ifndef SWIG
 
-#define LRT_RREGISTRY_GETENTRYCOUNT_ENTRY(CLASS) static_cast<size_t>(CLASS::_COUNT),
+#define LRT_RREGISTRY_GETENTRYCOUNT_ENTRY(CLASS) \
+  static_cast<size_t>(CLASS::_COUNT),
 
 constexpr size_t GetEntryCountTypes[static_cast<size_t>(Type::_COUNT)] = {
   LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(

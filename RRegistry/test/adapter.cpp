@@ -26,7 +26,7 @@ class Adapter : public rregistry::Registry::Adapter
   virtual void send(const Message& msg,
                     rcomm::Reliability = rcomm::DefaultReliability)
   {
-    cout << msg.print().str() << endl;
+    //cout << msg.print().str() << endl;
 
     if(m_target)
       m_target->parseMessage(msg);
