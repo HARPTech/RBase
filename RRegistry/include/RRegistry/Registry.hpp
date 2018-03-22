@@ -1,10 +1,10 @@
 #ifndef LRT_RREGISTRY_REGISTRY_HPP
 #define LRT_RREGISTRY_REGISTRY_HPP
 
-#include "PersistencyPolicy.hpp"
 #include "DebuggingDataStore.hpp"
 #include "Detail.hpp"
 #include "Entries.hpp"
+#include "PersistencyPolicy.hpp"
 #include "RegistryReceiver.hpp"
 #include "TypeConverter.hpp"
 #include <RComm/LiteCommAdapter.hpp>
@@ -27,10 +27,10 @@ class Registry
   public:
   friend class rcomm::LiteCommAdapter<Registry>;
   Registry() { initDefaults(); }
-  ~Registry() {}
+  virtual ~Registry() {}
 
   using Adapter = rcomm::LiteCommAdapter<Registry>;
-  using AdapterPtr = std::shared_ptr<Adapter>;
+  using AdapterPtr = std::weak_ptr<Adapter>;
 
   // The receivers are a collection of raw pointers to make easy registering
   // easier to do. For example in class constructors and destructors.
@@ -73,8 +73,13 @@ class Registry
                   rcomm::Reliability reliability = rcomm::DefaultReliability)
   {
     setToArray(property, value);
-    for(auto adapter : m_adapters)
-      adapter->set(property, value, reliability);
+    for(auto it = m_adapters.begin(); it != m_adapters.end(); ++it) {
+      if(auto lock = it->lock()) {
+        lock->set(property, value, reliability);
+      } else {
+        m_adapters.erase(it);
+      }
+    }
     for(auto receiver : m_receivers)
       receiver->onUpdate(GetEnumTypeOfEntryClass(property),
                          static_cast<uint16_t>(property));
@@ -117,15 +122,27 @@ class Registry
   }
 
   void registerAdapter(AdapterPtr adapter) { m_adapters.push_back(adapter); }
-  void removeAdapter(AdapterPtr adapter)
+  void removeAdapter(std::shared_ptr<Adapter> adapter)
   {
-    std::remove(m_adapters.begin(), m_adapters.end(), adapter);
+    std::remove_if(
+      m_adapters.begin(), m_adapters.end(), [adapter](AdapterPtr ptr) {
+        if(auto lock = ptr.lock()) {
+          return lock.get() == adapter.get();
+        } else {
+          return false;
+        }
+      });
   }
   void removeAdapter(Adapter* adapter)
   {
-    std::remove_if(m_adapters.begin(),
-                   m_adapters.end(),
-                   [adapter](AdapterPtr ptr) { return ptr.get() == adapter; });
+    std::remove_if(
+      m_adapters.begin(), m_adapters.end(), [adapter](AdapterPtr ptr) {
+        if(auto lock = ptr.lock()) {
+          return lock.get() == adapter;
+        } else {
+          return false;
+        }
+      });
   }
 
   void addReceiver(ReceiverPtr receiver) { m_receivers.push_back(receiver); }
@@ -137,9 +154,9 @@ class Registry
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
-  void setConsistencyPolicy(PersistencyPolicyPtr consistencyPolicy)
+  void setPersistencyPolicy(PersistencyPolicyPtr persistencyPolicy)
   {
-    m_consistencyPolicy = std::move(consistencyPolicy);
+    m_persistencyPolicy = std::move(persistencyPolicy);
   }
 
 // The following declaration is not supported by swig and therefore it is
@@ -158,7 +175,7 @@ class Registry
     TypeCategory property);
 
   protected:
-  PersistencyPolicyPtr m_consistencyPolicy;
+  PersistencyPolicyPtr m_persistencyPolicy;
 
   private:
   std::vector<AdapterPtr> m_adapters;

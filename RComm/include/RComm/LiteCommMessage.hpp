@@ -46,6 +46,8 @@ struct LiteCommMessage
     explicit_length = msg.explicit_length;
   }
 
+  virtual ~LiteCommMessage() {}
+
   /**
    * @brief Returns the type of the message.
    *

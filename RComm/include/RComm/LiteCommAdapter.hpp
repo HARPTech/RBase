@@ -64,7 +64,7 @@ class LiteCommAdapter
     , m_adapterId(adapterId)
   {
   }
-  ~LiteCommAdapter() {}
+  virtual ~LiteCommAdapter() {}
 
   void setDropperPolicy(LiteCommDropperPolicyPtr policy)
   {
@@ -356,8 +356,8 @@ class LiteCommAdapter
 
         // If there is a consistency policy in place, write the new value
         // into that.
-        if(m_registry->m_consistencyPolicy) {
-          m_registry->m_consistencyPolicy->push(
+        if(m_registry->m_persistencyPolicy) {
+          m_registry->m_persistencyPolicy->push(
             clientId, type, property, lData);
         }
 
