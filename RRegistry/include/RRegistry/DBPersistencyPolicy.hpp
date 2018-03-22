@@ -25,7 +25,7 @@ class DBPersistencyPolicy : public PersistencyPolicy
   DBPersistencyPolicy(int trigger = 50);
   virtual ~DBPersistencyPolicy();
 
-  void start(const std::string& dbFile = "./registry.db");
+  void start(std::string dbFile = "");
   void stop();
 
   virtual void push(uint16_t clientId,
@@ -33,7 +33,7 @@ class DBPersistencyPolicy : public PersistencyPolicy
                     uint16_t property,
                     rcomm::LiteCommData data) override;
 
-  virtual void enable(const std::string &dbFile) override;
+  virtual void enable(const std::string& dbFile = "") override;
   virtual void disable() override;
 
   private:
@@ -63,7 +63,7 @@ class DBPersistencyPolicy : public PersistencyPolicy
 
   std::queue<Record> m_recordsQueue;
   bool m_running = false;
-  bool m_stop = false;
+  bool m_stop = true;
 
   int m_trigger;
   int m_triggerCounter = 0;

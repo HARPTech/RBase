@@ -4,8 +4,10 @@
 #include <RRegistry/Entries.hpp>
 #include <RRegistry/TypeConverter.hpp>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <sqlite3.h>
+#include <sstream>
 
 struct Sqlite3StmtDeleter
 {
@@ -75,19 +77,35 @@ DBPersistencyPolicy::DBPersistencyPolicy(int trigger)
 }
 DBPersistencyPolicy::~DBPersistencyPolicy()
 {
+  cout
+    << "[DBPersistencyPolicy] Ending Persistency Policy and try to stop worker."
+    << endl;
   stop();
 }
 
 void
-DBPersistencyPolicy::start(const std::string& dbFile)
+DBPersistencyPolicy::start(std::string dbFile)
 {
+  if(dbFile == "") {
+    // New files should be named after the current datetime and reside in
+    // ~/public_html for easy access.
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::stringstream file;
+
+    std::string homedir = getenv("HOME");
+
+    file << homedir << "/public_html/"
+         << std::put_time(&tm, "RegistryDump_%Y-%m-%d_%H-%M-%S.db");
+    dbFile = file.str();
+  }
   int rc = 0;
   sqlite3* db = nullptr;
   char* err = nullptr;
 
   rc = sqlite3_open(dbFile.c_str(), &db);
   if(rc) {
-    cout << "[DBConsistencyPolicy] Could not open database file \"" << dbFile
+    cout << "[DBPersistencyPolicy] Could not open database file \"" << dbFile
          << "\"! Error: " << sqlite3_errmsg(db) << endl;
     sqlite3_close(db);
     return;
@@ -106,7 +124,7 @@ DBPersistencyPolicy::start(const std::string& dbFile)
       nullptr,
       &err);
     if(rc) {
-      cout << "[DBConsistencyPolicy] Could not create table general! Error: "
+      cout << "[DBPersistencyPolicy] Could not create table general! Error: "
            << err << endl;
     }
   }
@@ -127,7 +145,7 @@ DBPersistencyPolicy::start(const std::string& dbFile)
       nullptr,
       &err);
     if(rc) {
-      cout << "[DBConsistencyPolicy] Could not create table sets" << name
+      cout << "[DBPersistencyPolicy] Could not create table sets" << name
            << "! Error: " << err << endl;
     }
   }
@@ -153,23 +171,28 @@ DBPersistencyPolicy::start(const std::string& dbFile)
     sqlite3_free(err);
 
   // Start the worker.
+  m_stop = false;
   m_workerThread = std::thread(std::bind(&DBPersistencyPolicy::run, this));
 }
 void
 DBPersistencyPolicy::stop()
 {
-  std::unique_lock<std::mutex> lock(m_queueMutex);
-  m_stop = true;
-  m_queueFullCondition.notify_one();
-  m_queueFullCondition.wait(lock, [this]() { return m_running == false; });
+  {
+    std::lock_guard<std::mutex> lock(m_queueMutex);
+    m_stop = true;
+  }
+  m_queueFullCondition.notify_all();
+  m_workerThread.join();
 }
 void
-DBPersistencyPolicy::enable(const std::string &dbFile)
+DBPersistencyPolicy::enable(const std::string& dbFile)
 {
+  start(dbFile);
 }
 void
 DBPersistencyPolicy::disable()
 {
+  stop();
 }
 void
 DBPersistencyPolicy::push(uint16_t clientId,
@@ -177,6 +200,8 @@ DBPersistencyPolicy::push(uint16_t clientId,
                           uint16_t property,
                           rcomm::LiteCommData data)
 {
+  if(m_stop)
+    return;
   Record record;
   record.timeSinceStart = Clock::now() - m_startTime;
   record.clientId = clientId;
@@ -196,12 +221,11 @@ DBPersistencyPolicy::push(uint16_t clientId,
 void
 DBPersistencyPolicy::run()
 {
-  cout << "[DBConsistencyPolicy] Worker started." << endl;
+  cout << "[DBPersistencyPolicy] Worker started." << endl;
   m_running = true;
   while(!m_stop) {
     std::unique_lock<std::mutex> lock(m_queueMutex);
     m_queueFullCondition.wait(lock);
-
     // After waiting for a notification, new values should be written into the
     // database.
     beginTransaction();
@@ -213,8 +237,8 @@ DBPersistencyPolicy::run()
     }
     commit();
   }
-  cout << "[DBConsistencyPolicy] Worker ended." << endl;
   m_running = false;
+  cout << "[DBPersistencyPolicy] Worker ended." << endl;
 }
 void
 DBPersistencyPolicy::insertRecord(const Record& record)
@@ -259,7 +283,7 @@ DBPersistencyPolicy::prepareStatement(const std::string& statement)
   Sqlite3StmtPtr ptr = Sqlite3StmtPtr(stmt);
 
   if(!stmt) {
-    cout << "[DBConsistencyPolicy] Could not compile SQL-Statement: \""
+    cout << "[DBPersistencyPolicy] Could not compile SQL-Statement: \""
          << statement << "\". Error: " << sqlite3_errmsg(m_db.get()) << endl;
     ptr.reset();
   }
