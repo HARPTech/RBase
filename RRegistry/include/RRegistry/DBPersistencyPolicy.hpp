@@ -29,8 +29,9 @@ namespace rregistry {
  * activated.
  *
  * The database can later be queried with commands like this (in SQL):
- * SELECT general.key,setsInt16.timestamp,setsInt16.value FROM setsInt16
- *  INNER JOIN general ON general.value = setsInt16.property;
+ *  SELECT general.key,setsInt16.timestamp,setsInt16.value FROM setsInt16
+ *      JOIN general ON general.value = setsInt16.property
+ *    WHERE substr(general.key, 0, 6) = "Int16";
  */
 class DBPersistencyPolicy : public PersistencyPolicy
 {
