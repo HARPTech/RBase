@@ -36,6 +36,16 @@ struct LiteCommMessage
 
   Buffer buf;
 
+  LiteCommMessage() {}
+
+  LiteCommMessage(const LiteCommMessage& msg)
+  {
+    buf = msg.buf;
+    sequentNumber = msg.sequentNumber;
+    clientId = msg.clientId;
+    explicit_length = msg.explicit_length;
+  }
+
   /**
    * @brief Returns the type of the message.
    *
