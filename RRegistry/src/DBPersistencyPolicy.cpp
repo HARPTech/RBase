@@ -77,9 +77,7 @@ DBPersistencyPolicy::DBPersistencyPolicy(int trigger)
 }
 DBPersistencyPolicy::~DBPersistencyPolicy()
 {
-  cout
-    << "[DBPersistencyPolicy] Ending Persistency Policy and try to stop worker."
-    << endl;
+  cout << "[DBPersistencyPolicy] Stopping DBPersistencyPolicy." << endl;
   stop();
 }
 
@@ -177,22 +175,28 @@ DBPersistencyPolicy::start(std::string dbFile)
 void
 DBPersistencyPolicy::stop()
 {
-  {
-    std::lock_guard<std::mutex> lock(m_queueMutex);
-    m_stop = true;
+  if(m_running) {
+    cout << "[DBPersistencyPolicy] Trying to stop internal worker thread."
+         << endl;
+    {
+      std::lock_guard<std::mutex> lock(m_queueMutex);
+      m_stop = true;
+    }
+    m_queueFullCondition.notify_all();
+    m_workerThread.join();
   }
-  m_queueFullCondition.notify_all();
-  m_workerThread.join();
 }
 void
 DBPersistencyPolicy::enable(const std::string& dbFile)
 {
-  start(dbFile);
+  if(!m_running)
+    start(dbFile);
 }
 void
 DBPersistencyPolicy::disable()
 {
-  stop();
+  if(m_running)
+    stop();
 }
 void
 DBPersistencyPolicy::push(uint16_t clientId,
