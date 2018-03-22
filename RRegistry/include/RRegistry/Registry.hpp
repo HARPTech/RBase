@@ -154,7 +154,7 @@ class Registry
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
-  void setPersistencyPolicy(PersistencyPolicyPtr persistencyPolicy)
+  void setPersistencyPolicy(PersistencyPolicyPtr &&persistencyPolicy)
   {
     m_persistencyPolicy = std::move(persistencyPolicy);
   }
