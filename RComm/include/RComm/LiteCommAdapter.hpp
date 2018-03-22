@@ -357,8 +357,22 @@ class LiteCommAdapter
         // If there is a consistency policy in place, write the new value
         // into that.
         if(m_registry->m_persistencyPolicy) {
-          m_registry->m_persistencyPolicy->push(
-            clientId, type, property, lData);
+          auto persistencyPolicy = m_registry->m_persistencyPolicy.get();
+
+          if(type == rregistry::Type::Bool &&
+             property == static_cast<uint16_t>(rregistry::Bool::PERS_ENABLE)) {
+            if(lData.Bool && !m_registry->get(rregistry::Bool::PERS_ACTIVE)) {
+              persistencyPolicy->enable();
+              m_registry->set(rregistry::Bool::PERS_ACTIVE, true);
+            } else if(!lData.Bool &&
+                      m_registry->get(rregistry::Bool::PERS_ACTIVE)) {
+              persistencyPolicy->disable();
+              m_registry->set(rregistry::Bool::PERS_ACTIVE, false);
+            }
+          }
+          if(m_registry->get(rregistry::Bool::PERS_ACTIVE)) {
+            persistencyPolicy->push(clientId, type, property, lData);
+          }
         }
 
         // There was a set (= update), so the internal debugging state has to

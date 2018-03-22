@@ -117,6 +117,9 @@ enum class Bool
 
   BRST_RBREAKOUT_MOVEMENT = 4,
 
+  PERS_ENABLE = 5,
+  PERS_ACTIVE = 6,
+
   _COUNT
 };
 enum class String

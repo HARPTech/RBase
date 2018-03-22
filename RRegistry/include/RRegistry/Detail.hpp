@@ -458,7 +458,19 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Bool) = {
     "",
     false,
     false,
-    true }
+    true },
+  { "PERS_ENABLE",
+    "Enable persistency policy for the registry.",
+    "",
+    false,
+    false,
+    true },
+  { "PERS_ACTIVE",
+    "Marks the state (active or inactive) of the registry persistency policy.",
+    "",
+    false,
+    false,
+    true },
 };
 static constexpr EntryDetailLite
   StringDetail[static_cast<size_t>(String::_COUNT)] = {

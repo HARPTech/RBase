@@ -22,7 +22,7 @@ class PersistencyPolicy
   {
   }
 
-  virtual void enable(const std::string &dbFile) {}
+  virtual void enable(const std::string& dbFile = "") {}
   virtual void disable() {}
 };
 
