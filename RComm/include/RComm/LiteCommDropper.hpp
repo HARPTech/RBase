@@ -3,6 +3,7 @@
 
 #include "LiteCommMessage.hpp"
 #include <RRegistry/SubscriptionMap.hpp>
+#include <limits>
 #include <memory>
 
 namespace lrt {
@@ -42,6 +43,10 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
           return false;
         } else if(entry.clientId != clientId) {
           entry.clientId = clientId;
+          entry.sequentNumber = sequentNumber;
+          return false;
+        } else if(sequentNumber ==
+                  std::numeric_limits<decltype(sequentNumber)>::min()) {
           entry.sequentNumber = sequentNumber;
           return false;
         } else {
