@@ -59,10 +59,12 @@ class LiteCommAdapter
     int adapterId = 0)
     : m_registry(registry)
     , m_subscriptions(rregistry::InitSubscriptionMap(subscribed))
+    , m_subscriptionsRemote(rregistry::InitSubscriptionMap(false))
     , m_adapterName(adapterName)
     , m_debuggingDataStore(debuggingDataStore)
     , m_adapterId(adapterId)
   {
+    setDropperPolicy(std::make_unique<LiteCommDropperPolicy>());
   }
   virtual ~LiteCommAdapter() {}
 
@@ -325,8 +327,10 @@ class LiteCommAdapter
     if(type >= rregistry::Type::_COUNT)
       return MessageTypeInvalid;
 
-    if(m_dropperPolicy && m_dropperPolicy->shouldBeDropped(msg)) {
-      return MessageDropped;
+    if(m_dropperPolicy) {
+      if(m_dropperPolicy->shouldBeDropped(msg)) {
+        return MessageDropped;
+      }
     }
 
     thread_local LiteCommData lData;
@@ -496,9 +500,8 @@ class LiteCommAdapter
   bool m_acceptProperty = true;
   const char* m_adapterName;
 
-  std::unique_ptr<rregistry::SubscriptionMap<>> m_subscriptions;
-  std::unique_ptr<rregistry::SubscriptionMap<>> m_subscriptionsRemote =
-    rregistry::InitSubscriptionMap(false);
+  std::unique_ptr<rregistry::SubscriptionMap<bool>> m_subscriptions;
+  std::unique_ptr<rregistry::SubscriptionMap<bool>> m_subscriptionsRemote;
 
   DebugMode m_debugState = DebugMode::WaitingForSet;
   rregistry::Type m_lastSetType;

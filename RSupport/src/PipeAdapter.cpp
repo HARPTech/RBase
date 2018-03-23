@@ -84,7 +84,7 @@ PipeAdapter::disconnect()
 RSupportStatus
 PipeAdapter::service()
 {
-  const std::size_t bufferSize = 100;
+  const std::size_t bufferSize = 200;
 
   std::array<char, bufferSize> buffer;
 
@@ -111,14 +111,7 @@ PipeAdapter::service()
 
         // Get the type of the new message;
         (*m_messageIt++) = (*it++);
-
         --size;
-
-        // Check if the received byte matches a known type.
-        if(m_message.lType() >= LiteCommType::_COUNT) {
-          (m_messageIt = m_message.buf.begin());
-          continue;
-        }
       }
 
       std::size_t remainingBytes = m_message.remainingBytes(m_messageIt);
@@ -132,7 +125,10 @@ PipeAdapter::service()
       }
 
       if(remainingBytes == 0) {
-        parseMessage(m_message);
+        auto status = parseMessage(m_message);
+        if(status != rcomm::Success) {
+          cout << "Parse Error in message received from Pipe.";
+        }
         m_messageIt = m_message.buf.begin();
       }
     }
