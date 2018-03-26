@@ -125,6 +125,21 @@ GetEntryCount(Type type)
 {
   return GetEntryCountTypes[static_cast<size_t>(type)];
 }
+
+#define LRT_RREGISTRY_GETSIZEOFTYPE_CASE(CLASS) \
+  case Type::CLASS:                             \
+    return sizeof(typename GetValueTypeOfEntryClass<CLASS>::type);
+
+constexpr size_t
+GetSizeOfType(Type type)
+{
+  switch(type) {
+    LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+      LRT_RREGISTRY_GETSIZEOFTYPE_CASE)
+    default:
+      return 8;
+  }
+}
 }
 }
 

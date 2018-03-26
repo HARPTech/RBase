@@ -79,7 +79,8 @@ struct LiteCommMessage
     switch(lType(pos)) {
       case LiteCommType::Update:
       case LiteCommType::Append:
-        return pos + 12;
+        return pos + sizeof(uint8_t) * 2 + sizeof(uint16_t) +
+               rregistry::GetSizeOfType(getType());
       case LiteCommType::Request:
       case LiteCommType::Subscribe:
       case LiteCommType::Unsubscribe:
