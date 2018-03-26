@@ -134,8 +134,9 @@ constexpr size_t
 GetSizeOfType(Type type)
 {
   switch(type) {
-    LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
-      LRT_RREGISTRY_GETSIZEOFTYPE_CASE)
+    LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RREGISTRY_GETSIZEOFTYPE_CASE)
+    case Type::String:
+      return 8;
     default:
       return 8;
   }
