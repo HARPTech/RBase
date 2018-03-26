@@ -40,7 +40,9 @@ struct LiteCommMessage
 
   LiteCommMessage(const LiteCommMessage& msg)
   {
-    buf = msg.buf;
+    for(std::size_t i = 0; i < msg.buf.size(); ++i) {
+      buf[i] = msg.buf[i];
+    }
     sequentNumber = msg.sequentNumber;
     clientId = msg.clientId;
     explicit_length = msg.explicit_length;

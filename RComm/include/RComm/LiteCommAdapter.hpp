@@ -66,7 +66,10 @@ class LiteCommAdapter
   {
     setDropperPolicy(std::make_unique<LiteCommDropperPolicy>());
   }
-  virtual ~LiteCommAdapter() {}
+  virtual ~LiteCommAdapter() {
+    if(m_registry)
+      m_registry->removeAdapter(this);
+  }
 
   void setDropperPolicy(LiteCommDropperPolicyPtr policy)
   {
