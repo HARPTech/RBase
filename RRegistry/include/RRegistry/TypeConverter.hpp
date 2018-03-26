@@ -130,7 +130,7 @@ GetEntryCount(Type type)
   case Type::CLASS:                             \
     return sizeof(typename GetValueTypeOfEntryClass<CLASS>::type);
 
-size_t
+inline size_t
 GetSizeOfType(Type type)
 {
   switch(type) {
