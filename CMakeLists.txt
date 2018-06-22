@@ -15,6 +15,8 @@ set(AdditionalCatchParameters -o report.xml -r junit)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 
+find_package(Boost COMPONENTS serialization)
+
 if(hasParent)
 		set(INSTALL_RBASE FALSE)
 else()

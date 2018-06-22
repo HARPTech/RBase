@@ -1,7 +1,7 @@
 # Imports python into CMake and the swig system.
 
 find_package(PythonLibs)
-include_directories(${PYTHON_INCLUDE_DIRS})
+include_directories(${PYTHON_INCLUDE_DIRS} /usr/lib64/python3.6/site-packages/numpy/core/include)
 
 set_property(SOURCE rregistry.i PROPERTY CPLUSPLUS ON)
 SWIG_ADD_LIBRARY(RRegistry LANGUAGE python SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/rregistry.i)
