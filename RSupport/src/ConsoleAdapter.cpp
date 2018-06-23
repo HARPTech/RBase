@@ -12,6 +12,7 @@
 
 using std::cin;
 using std::cout;
+using std::clog;
 using std::endl;
 
 namespace lrt {
@@ -50,25 +51,34 @@ ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
 void
 ConsoleAdapter::read()
 {
-  using namespace boost::archive::iterators;
-  typedef transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>
-    binaryIt;
-
   std::getline(cin, m_inputBuffer);
   // Parse incoming messages.
 
   if(m_inputBuffer.length() > 2) {
     if(m_inputBuffer[0] == '!' && m_inputBuffer[1] == ':') {
       m_inputBuffer.erase(0, 2);
-
-      std::replace(m_inputBuffer.begin(), m_inputBuffer.end(), '=', 'A');
-
-      std::copy(binaryIt(m_inputBuffer.begin()),
-                binaryIt(m_inputBuffer.end()),
-                m_inputMessage.buf.begin());
+      parseBase64(m_inputBuffer);
     }
+  }
+}
 
+void
+ConsoleAdapter::parseBase64(const std::string& base64)
+{
+  using namespace boost::archive::iterators;
+  typedef transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>
+    binaryIt;
+
+  try {
+
+    std::replace(m_inputBuffer.begin(), m_inputBuffer.end(), '=', 'A');
+
+    std::copy(binaryIt(base64.begin()),
+              binaryIt(base64.end()),
+              m_inputMessage.buf.begin());
     parseMessage(m_inputMessage);
+  } catch(dataflow_exception& e) {
+    clog << "Invalid base64: " << base64 << endl;
   }
 }
 }

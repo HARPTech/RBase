@@ -7,10 +7,10 @@ namespace lrt {
 namespace rsupport {
 class ConsoleAdapter : public rregistry::Registry::Adapter
 {
-public:
+  public:
   public:
   ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
-              bool subscribedToAll = false);
+                 bool subscribedToAll = false);
   virtual ~ConsoleAdapter();
 
   virtual void send(
@@ -18,7 +18,9 @@ public:
     rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 
   void read();
-private:
+  void parseBase64(const std::string& base64);
+
+  private:
   std::string m_inputBuffer;
   Message m_inputMessage;
 };
