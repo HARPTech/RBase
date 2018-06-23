@@ -33,7 +33,7 @@ ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
     transform_width<Message::Buffer::const_iterator, 6, 8>>
     base64Iterator;
 
-  unsigned int writePaddChars = (3 - msg.length() % 3) % 3;
+  int writePaddChars = (3 - msg.length() % 3) % 3 + 1;
 
   if(m_mode & STDOUT) {
     // Output the new data to the console directly.
@@ -42,7 +42,7 @@ ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
               base64Iterator(msg.buf.begin() + msg.length()),
               std::ostreambuf_iterator<char>(cout));
 
-    while(writePaddChars > 0) {
+    while(writePaddChars >= 0) {
       cout << "=";
       writePaddChars--;
     }
@@ -50,11 +50,16 @@ ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
   }
   if(m_mode & CALLBACK) {
     // Output the data to all callbacks.
-    std::string outStr = "!:";
-    std::copy(base64Iterator(msg.buf.begin()),
-              base64Iterator(msg.buf.begin() + msg.length()),
-              outStr.begin());
-    outStr.append("=", writePaddChars);
+    std::string outStr = "";
+    outStr.reserve(20);
+    outStr = std::string(base64Iterator(msg.buf.begin()),
+                         base64Iterator(msg.buf.begin() + msg.length()));
+    outStr = "!:" + outStr;
+    while(writePaddChars >= 0) {
+      outStr.append("=");
+      writePaddChars--;
+    }
+    outStr.append("\n");
     for(auto cb : m_callbacks) {
       cb(outStr);
     }
@@ -63,6 +68,10 @@ ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
 void
 ConsoleAdapter::read()
 {
+  if(m_readTimeout < 10) {
+    m_readTimeout ++;
+    return;
+  }
   std::string line;
   std::getline(cin, line);
   parseLine(line);
@@ -86,6 +95,7 @@ ConsoleAdapter::parseBase64(std::string base64)
     binaryIt;
 
   try {
+    base64 = base64.substr(0, base64.find('\n'));
     std::replace(base64.begin(), base64.end(), '=', 'A');
 
     std::copy(binaryIt(base64.begin()),
@@ -93,7 +103,8 @@ ConsoleAdapter::parseBase64(std::string base64)
               m_inputMessage.buf.begin());
     parseMessage(m_inputMessage);
   } catch(dataflow_exception& e) {
-    clog << "Invalid base64: " << base64 << endl;
+    clog << "Invalid base64: \"" << base64 << "\"" << endl
+         << "Error: " << e.what();
   }
 }
 }

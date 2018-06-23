@@ -39,6 +39,7 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
   Message m_inputMessage;
   std::vector<WriteCallback> m_callbacks;
   Mode m_mode = STDOUT;
+  int m_readTimeout = 0;
 };
 }
 }
