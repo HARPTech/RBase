@@ -11,8 +11,8 @@
 #include <boost/archive/iterators/transform_width.hpp>
 
 using std::cin;
-using std::cout;
 using std::clog;
+using std::cout;
 using std::endl;
 
 namespace lrt {
@@ -35,43 +35,58 @@ ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
 
   unsigned int writePaddChars = (3 - msg.length() % 3) % 3;
 
-  // Output the new data to the console directly.
-  cout << "!:";
-  std::copy(base64Iterator(msg.buf.begin()),
-            base64Iterator(msg.buf.begin() + msg.length()),
-            std::ostreambuf_iterator<char>(cout));
+  if(m_mode & STDOUT) {
+    // Output the new data to the console directly.
+    cout << "!:";
+    std::copy(base64Iterator(msg.buf.begin()),
+              base64Iterator(msg.buf.begin() + msg.length()),
+              std::ostreambuf_iterator<char>(cout));
 
-  while(writePaddChars > 0) {
-    cout << "=";
-    writePaddChars--;
+    while(writePaddChars > 0) {
+      cout << "=";
+      writePaddChars--;
+    }
+    cout << endl;
   }
-
-  cout << endl;
+  if(m_mode & CALLBACK) {
+    // Output the data to all callbacks.
+    std::string outStr = "!:";
+    std::copy(base64Iterator(msg.buf.begin()),
+              base64Iterator(msg.buf.begin() + msg.length()),
+              outStr.begin());
+    outStr.append("=", writePaddChars);
+    for(auto cb : m_callbacks) {
+      cb(outStr);
+    }
+  }
 }
 void
 ConsoleAdapter::read()
 {
-  std::getline(cin, m_inputBuffer);
-  // Parse incoming messages.
-
-  if(m_inputBuffer.length() > 2) {
-    if(m_inputBuffer[0] == '!' && m_inputBuffer[1] == ':') {
-      m_inputBuffer.erase(0, 2);
-      parseBase64(m_inputBuffer);
+  std::string line;
+  std::getline(cin, line);
+  parseLine(line);
+}
+void
+ConsoleAdapter::parseLine(std::string line)
+{
+  if(line.length() > 2) {
+    if(line[0] == '!' && line[1] == ':') {
+      line.erase(0, 2);
+      parseBase64(line);
     }
   }
 }
 
 void
-ConsoleAdapter::parseBase64(const std::string& base64)
+ConsoleAdapter::parseBase64(std::string base64)
 {
   using namespace boost::archive::iterators;
   typedef transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>
     binaryIt;
 
   try {
-
-    std::replace(m_inputBuffer.begin(), m_inputBuffer.end(), '=', 'A');
+    std::replace(base64.begin(), base64.end(), '=', 'A');
 
     std::copy(binaryIt(base64.begin()),
               binaryIt(base64.end()),
