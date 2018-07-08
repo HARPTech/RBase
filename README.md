@@ -3,6 +3,8 @@
 This project combines the once separated RComm and RRegistry into one package, also containing
 a support library for connecting to a RMaster instance and files for SWIG-usage.
 
+Additionally, the support library RSupport for Regulation Kernels is implemented in this repository.
+
 All other parts of the codebase include this repository as a submodule, which reduces the overhead of
 having the registry and the communication standards in different repositories. The support library is also
 needed for the master, which uses its headers to receive initial configuration for pipe management. Additionally,
