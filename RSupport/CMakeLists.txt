@@ -12,6 +12,7 @@ set_target_properties(rsupport PROPERTIES
 
 target_link_libraries(rsupport rcomm)
 target_link_libraries(rsupport rregistry)
+target_link_libraries(rsupport Boost::serialization)
 
 target_include_directories(rsupport PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

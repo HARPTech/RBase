@@ -36,6 +36,7 @@ typedef enum RSupportOption {
 namespace lrt {
 namespace rsupport {
 class PipeAdapter;
+class ConsoleAdapter;
 }
 }
 
@@ -53,7 +54,8 @@ class PipeAdapter;
 struct RSupportHandle
 {
   std::shared_ptr<lrt::rregistry::Registry> registry;
-  std::shared_ptr<lrt::rsupport::PipeAdapter> adapter;
+  std::shared_ptr<lrt::rsupport::PipeAdapter> pipeAdapter;
+  std::shared_ptr<lrt::rsupport::ConsoleAdapter> consoleAdapter;
   std::bitset<RSupportOption__Count> options;
   std::chrono::system_clock::time_point frameStart =
     std::chrono::system_clock::now();

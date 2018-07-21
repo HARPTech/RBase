@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 
+#include "../include/RSupport/ConsoleAdapter.hpp"
 #include "../include/RSupport/PipeAdapter.hpp"
 #include "../include/RSupport/RSupport.hpp"
 #include <RRegistry/Entries.hpp>
@@ -42,10 +43,21 @@ rsupport_handle_create(bool subscribedToAll)
 
   // Initiate other fields.
   handle->registry = std::make_shared<lrt::rregistry::Registry>();
-  handle->adapter = std::make_shared<lrt::rsupport::PipeAdapter>(
-    handle->registry, subscribedToAll);
 
-  handle->registry->registerAdapter(handle->adapter);
+  // Check the environment variables for special modes of operation.
+  const char* consoleOnlyMode = std::getenv("RSUPPORT_CONSOLE_ONLY");
+  if(consoleOnlyMode) {
+    // Activate console only mode. This means, that changes will be printed to
+    // the console and each frame reads a single line as LiteComm input from
+    // cin.
+    handle->consoleAdapter = std::make_shared<lrt::rsupport::ConsoleAdapter>(
+      handle->registry, subscribedToAll);
+    handle->registry->registerAdapter(handle->consoleAdapter);
+  } else {
+    handle->pipeAdapter = std::make_shared<lrt::rsupport::PipeAdapter>(
+      handle->registry, subscribedToAll);
+    handle->registry->registerAdapter(handle->pipeAdapter);
+  }
 
   // Set default options.
   rsupport_handle_set_option(handle, RSupportOption_AutoFrequency, true);
@@ -57,7 +69,10 @@ rsupport_handle_create(bool subscribedToAll)
 RSupportStatus
 rsupport_handle_free(RSupportHandle* handle)
 {
-  handle->registry->removeAdapter(handle->adapter);
+  if(handle->pipeAdapter)
+    handle->registry->removeAdapter(handle->pipeAdapter);
+  if(handle->consoleAdapter)
+    handle->registry->removeAdapter(handle->consoleAdapter);
   delete handle;
   return RSupportStatus_Ok;
 }
@@ -92,14 +107,23 @@ rsupport_handle_service(RSupportHandle* handle)
              lrt::rregistry::Uint8::REGULATION_KERNEL_FREQUENCY)) -
       duration;
 
-    std::this_thread::sleep_for(waitDuration);
+    // If the console adapter is initialised, it will be used for pacing. If the
+    // PipeAdapter is used instead, a clock will be used.
+    if(handle->consoleAdapter) {
+      handle->consoleAdapter->read();
+    } else {
+      std::this_thread::sleep_for(waitDuration);
+    }
 
     // Get the start time of the next frame.
     handle->frameStart = std::chrono::system_clock::now();
   }
 
+  RSupportStatus status = RSupportStatus_Ok;
+
   // Service at the end to get the newest updates.
-  RSupportStatus status = handle->adapter->service();
+  if(handle->pipeAdapter)
+    status = handle->pipeAdapter->service();
 
   return status;
 }
@@ -140,15 +164,18 @@ RSupportStatus
 rsupport_handle_connect(RSupportHandle* handle, const char* pipe)
 {
   pipe = getPipePath(pipe);
-  RSupportStatus status = handle->adapter->connect(pipe);
+  RSupportStatus status = RSupportStatus_Ok;
+  if(handle->pipeAdapter) {
+    status = handle->pipeAdapter->connect(pipe);
 
-  if(status != RSupportStatus_Ok)
-    return status;
+    if(status != RSupportStatus_Ok)
+      return status;
 
-  // Check if there are any options that need to be sent to the other side.
-  if(rsupport_handle_get_option(handle, RSupportOption_AutoFrequency))
-    handle->adapter->subscribe(
-      lrt::rregistry::Uint8::REGULATION_KERNEL_FREQUENCY);
+    // Check if there are any options that need to be sent to the other side.
+    if(rsupport_handle_get_option(handle, RSupportOption_AutoFrequency))
+      handle->pipeAdapter->subscribe(
+        lrt::rregistry::Uint8::REGULATION_KERNEL_FREQUENCY);
+  }
 
   return status;
 }
@@ -157,13 +184,19 @@ RSupportStatus
 rsupport_handle_connect_create(RSupportHandle* handle, const char* pipe)
 {
   pipe = getPipePath(pipe);
-  return handle->adapter->create(pipe);
+  RSupportStatus status = RSupportStatus_Ok;
+  if(handle->pipeAdapter)
+    status = handle->pipeAdapter->create(pipe);
+  return status;
 }
 
 RSupportStatus
 rsupport_handle_disconnect(RSupportHandle* handle)
 {
-  return handle->adapter->disconnect();
+  RSupportStatus status = RSupportStatus_Ok;
+  if(handle->pipeAdapter)
+    status = handle->pipeAdapter->disconnect();
+  return status;
 }
 
 #define GETTER(CLASS)                                                        \
@@ -194,24 +227,36 @@ rsupport_handle_subscribe(RSupportHandle* handle,
                           uint16_t type,
                           uint16_t property)
 {
-  handle->adapter->subscribeByTypeVal(static_cast<lrt::rregistry::Type>(type),
-                                      property);
+  if(handle->pipeAdapter)
+    handle->pipeAdapter->subscribeByTypeVal(
+      static_cast<lrt::rregistry::Type>(type), property);
+  if(handle->consoleAdapter)
+    handle->consoleAdapter->subscribeByTypeVal(
+      static_cast<lrt::rregistry::Type>(type), property);
 }
 void
 rsupport_handle_unsubscribe(RSupportHandle* handle,
                             uint16_t type,
                             uint16_t property)
 {
-  handle->adapter->unsubscribeByTypeVal(static_cast<lrt::rregistry::Type>(type),
-                                        property);
+  if(handle->pipeAdapter)
+    handle->pipeAdapter->unsubscribeByTypeVal(
+      static_cast<lrt::rregistry::Type>(type), property);
+  if(handle->consoleAdapter)
+    handle->consoleAdapter->unsubscribeByTypeVal(
+      static_cast<lrt::rregistry::Type>(type), property);
 }
 void
 rsupport_handle_request(RSupportHandle* handle,
                         uint16_t type,
                         uint16_t property)
 {
-  handle->adapter->requestByTypeVal(static_cast<lrt::rregistry::Type>(type),
-                                    property);
+  if(handle->pipeAdapter)
+    handle->pipeAdapter->requestByTypeVal(
+      static_cast<lrt::rregistry::Type>(type), property);
+  if(handle->consoleAdapter)
+    handle->consoleAdapter->requestByTypeVal(
+      static_cast<lrt::rregistry::Type>(type), property);
 }
 
 std::shared_ptr<lrt::rregistry::Registry>
