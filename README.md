@@ -10,6 +10,9 @@ tests can be performed on this repository alone, which facilitates modularized u
 
 ## Getting Started
 
+Look into the tests and other programs using this software for examples. This software serves as interconnecting
+piece between SWIG-modules, C++ code and other parts of the stack.
+
 ## Deployment
 
 Please link the generated binaries with your program and use the provided API to store, exchange and
@@ -20,10 +23,6 @@ provide data to other parts of the codebase.
 * [CMake](https://cmake.org/) - Build Generator
 
 ## Contributing
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](#).
 
 ## Authors
 
