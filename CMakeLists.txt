@@ -17,6 +17,7 @@ set(AdditionalCatchParameters -o report.xml -r junit)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost COMPONENTS serialization)
 
 if(hasParent)
