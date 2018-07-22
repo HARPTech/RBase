@@ -5,18 +5,27 @@ add_subdirectory(src)
 add_subdirectory(test)
 
 add_library(rsupport SHARED ${SRCS})
+add_library(rsupports STATIC ${SRCS})
 
 set_target_properties(rsupport PROPERTIES
     CXX_STANDARD_REQUIRED 14
     CXX_EXTENSIONS OFF)
+set_target_properties(rsupports PROPERTIES
+    CXX_STANDARD_REQUIRED 14
+    CXX_EXTENSIONS OFF)
 
 target_link_libraries(rsupport rcomm)
+target_link_libraries(rsupports rcomm)
 target_link_libraries(rsupport rregistry)
+target_link_libraries(rsupports rregistrys)
 target_link_libraries(rsupport Boost::serialization)
+target_link_libraries(rsupports Boost::serialization)
 
 target_include_directories(rsupport PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(rsupports PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set_property(TARGET rsupport PROPERTY CXX_STANDARD 14)
+set_property(TARGET rsupports PROPERTY CXX_STANDARD 14)
 
 set_property(TARGET rsupport PROPERTY POSITION_INDEPENDENT_CODE ON)
 

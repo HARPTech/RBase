@@ -15,19 +15,28 @@ set(RRegistry_SRCS
 		${CMAKE_CURRENT_SOURCE_DIR}/src/DBPersistencyPolicy.cpp)
 
 add_library(rregistry SHARED ${RRegistry_SRCS})
+add_library(rregistrys STATIC ${RRegistry_SRCS})
+
 target_compile_definitions(rregistry
+    INTERFACE LIBRARY_HEADER_ONLY
+)
+target_compile_definitions(rregistrys
     INTERFACE LIBRARY_HEADER_ONLY
 )
 
 # Needed because of cross references to the communication protocols with the adapter class.
 target_link_libraries(rregistry rcomm)
+target_link_libraries(rregistrys rcomm)
 
 target_include_directories(rregistry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(rregistrys PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(SQLite3 REQUIRED)
 if(${SQLITE3_FOUND})
     target_include_directories(rregistry PRIVATE SYSTEM ${SQLITE3_INCLUDE_DIRS})
+    target_include_directories(rregistrys PRIVATE SYSTEM ${SQLITE3_INCLUDE_DIRS})
     target_link_libraries(rregistry ${SQLITE3_LIBRARIES})
+    target_link_libraries(rregistrys ${SQLITE3_LIBRARIES})
 endif()
 
 add_subdirectory(test)

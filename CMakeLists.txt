@@ -8,7 +8,8 @@ set(BUILD_NUMBER "0" CACHE STRING "Build-Number")
 set(VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}+${BUILD_NUMBER})
 
 option(testing "Enable building tests" ON)
-option(INSTALL_RBASE "Enable installing and building of RBase, including SWIG modules." TRUE)
+option(BUILD_SWIG "Enable building SWIG modules." FALSE)
+option(INSTALL_RBASE "Enable installing and building of RBase, including SWIG modules." FALSE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -21,6 +22,7 @@ find_package(Boost COMPONENTS serialization)
 if(hasParent)
 else()
 		set(INSTALL_RBASE TRUE)
+		set(BUILD_SWIG TRUE)
 endif()
 
 
@@ -41,7 +43,7 @@ add_subdirectory(RComm)
 add_subdirectory(RRegistry)
 add_subdirectory(RSupport)
 
-if(INSTALL_RBASE)
+if(BUILD_SWIG)
 		add_subdirectory(swig)
 endif()
 
