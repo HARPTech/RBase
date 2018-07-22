@@ -8,6 +8,7 @@ set(BUILD_NUMBER "0" CACHE STRING "Build-Number")
 set(VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}+${BUILD_NUMBER})
 
 option(testing "Enable building tests" ON)
+option(INSTALL_RBASE "Enable installing and building of RBase, including SWIG modules." TRUE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -18,7 +19,6 @@ get_directory_property(hasParent PARENT_DIRECTORY)
 find_package(Boost COMPONENTS serialization)
 
 if(hasParent)
-		set(INSTALL_RBASE FALSE)
 else()
 		set(INSTALL_RBASE TRUE)
 endif()

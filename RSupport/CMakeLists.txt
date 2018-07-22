@@ -29,5 +29,5 @@ if(INSTALL_RBASE)
 				ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/static)
 
 		install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/example/regulation-kernel.py
-				DESTINATION /usr/share/rbase/examples/)
+				DESTINATION share/rbase/examples/)
 endif()
