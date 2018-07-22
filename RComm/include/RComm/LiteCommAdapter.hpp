@@ -289,7 +289,7 @@ class LiteCommAdapter
                              [static_cast<uint32_t>(property)];
   }
   template<typename TypeCategory>
-  bool setSubscribed(TypeCategory property, bool subscribed)
+  void setSubscribed(TypeCategory property, bool subscribed)
   {
     (*m_subscriptions)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]

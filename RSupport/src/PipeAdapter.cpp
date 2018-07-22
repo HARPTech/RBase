@@ -18,8 +18,7 @@ PipeAdapter::PipeAdapter(std::shared_ptr<rregistry::Registry> registry,
                          bool subscribedToAll)
   : LiteCommAdapter(registry, subscribedToAll, nullptr, "PipeAdapter", 2)
   , m_messageIt(m_message.buf.begin())
-{
-}
+{}
 PipeAdapter::~PipeAdapter() {}
 
 void
@@ -80,6 +79,7 @@ PipeAdapter::disconnect()
 {
   close(m_in_fd);
   close(m_out_fd);
+  return RSupportStatus_Ok;
 }
 RSupportStatus
 PipeAdapter::service()
