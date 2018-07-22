@@ -66,7 +66,8 @@ class LiteCommAdapter
   {
     setDropperPolicy(std::make_unique<LiteCommDropperPolicy>());
   }
-  virtual ~LiteCommAdapter() {
+  virtual ~LiteCommAdapter()
+  {
     if(m_registry)
       m_registry->removeAdapter(this);
   }
@@ -489,6 +490,8 @@ class LiteCommAdapter
       }
     }
   }
+
+  void setAcceptProperty(bool accept) { m_acceptProperty = accept; }
 
   protected:
   template<class TypeCategory>
