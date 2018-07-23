@@ -1,6 +1,7 @@
 # Imports python into CMake and the swig system.
 
 find_package(PythonLibs)
+message(STATUS "Python Libs Found: " ${PYTHON_LIBRARIES})
 include_directories(${PYTHON_INCLUDE_DIRS} /usr/lib64/python3.6/site-packages/numpy/core/include)
 
 set_property(SOURCE rregistry.i PROPERTY CPLUSPLUS ON)
@@ -15,6 +16,8 @@ set_property(SOURCE rsupport.i PROPERTY SWIG_MODULE_NAME RSupport)
 
 set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rsupportPYTHON_wrap.cxx PROPERTY SKIP_AUTOMOC ON)
 set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rregistryPYTHON_wrap.cxx PROPERTY SKIP_AUTOMOC ON)
+set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rsupportPYTHON_wrap.cxx PROPERTY SKIP_AUTOGEN ON)
+set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rregistryPYTHON_wrap.cxx PROPERTY SKIP_AUTOGEN ON)
 
 if(INSTALL_RBASE)
 		install(FILES
