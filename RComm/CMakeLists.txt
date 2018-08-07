@@ -3,10 +3,9 @@ cmake_policy(SET CMP0048 NEW)
 project(RComm
 		VERSION 0.1.0)
 
-add_library(rcomm INTERFACE)
-target_compile_definitions(rcomm
-    INTERFACE LIBRARY_HEADER_ONLY
-)
+add_library(rcomm STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/RComm.cpp)
+
+target_link_libraries(rcomm rcore)
 
 install(TARGETS rcomm
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

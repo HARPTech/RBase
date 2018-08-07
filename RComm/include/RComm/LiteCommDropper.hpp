@@ -1,10 +1,10 @@
 #ifndef LRT_RCOMM_LITECOMMDROPPER_HPP
 #define LRT_RCOMM_LITECOMMDROPPER_HPP
 
-#include "LiteCommMessage.hpp"
 #include <RRegistry/SubscriptionMap.hpp>
-#include <limits>
 #include <memory>
+
+#include <iostream>
 
 namespace lrt {
 namespace rcomm {
@@ -15,7 +15,14 @@ class LiteCommDropperPolicy
   LiteCommDropperPolicy() {}
   virtual ~LiteCommDropperPolicy() {}
 
-  virtual bool shouldBeDropped(const LiteCommMessage& message) { return false; }
+  virtual bool shouldBeDropped(bool reliable,
+                               uint8_t type,
+                               uint16_t property,
+                               uint8_t seq_number,
+                               int adapterId)
+  {
+    return false;
+  }
 };
 
 using LiteCommDropperPolicyPtr = std::unique_ptr<LiteCommDropperPolicy>;
@@ -26,35 +33,27 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
   LiteCommDropperLossyPolicy() {}
   virtual ~LiteCommDropperLossyPolicy() {}
 
-  virtual bool shouldBeDropped(const LiteCommMessage& message)
+  virtual bool shouldBeDropped(bool reliable,
+                               uint8_t type,
+                               uint16_t property,
+                               uint8_t seq_number,
+                               int adapterId)
   {
-    switch(message.lType()) {
-      case LiteCommType::Lossy: {
-        // Analyse the packet. If the sequent number is smaller than the
-        // internal one, it should be dropped.
-        auto& entry =
-          (*m_records)[static_cast<std::size_t>(message.getType())]
-                      [static_cast<std::size_t>(message.getProperty())];
-        auto clientId = message.getClientId();
-        auto sequentNumber = message.getSequentNumber();
+    auto& entry = (*m_records)[static_cast<std::size_t>(type)]
+                              [static_cast<std::size_t>(property)];
 
-        if(sequentNumber > entry.sequentNumber) {
-          entry.sequentNumber = sequentNumber;
-          return false;
-        } else if(entry.clientId != clientId) {
-          entry.clientId = clientId;
-          entry.sequentNumber = sequentNumber;
-          return false;
-        } else if(sequentNumber ==
-                  std::numeric_limits<decltype(sequentNumber)>::min()) {
-          entry.sequentNumber = sequentNumber;
-          return false;
-        } else {
-          return true;
-        }
-      }
-      default:
-        return false;
+    if(seq_number >= entry.sequentNumber) {
+      entry.sequentNumber = seq_number;
+      return false;
+    } else if(entry.adapterId != adapterId) {
+      entry.adapterId = adapterId;
+      entry.sequentNumber = seq_number;
+      return false;
+    } else if(seq_number == 0b00111111) {
+      entry.sequentNumber = 0;
+      return false;
+    } else {
+      return true;
     }
   }
 
@@ -64,10 +63,10 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
     EntryRecord(uint16_t init)
     {
       sequentNumber = init;
-      clientId = init;
+      adapterId = init;
     }
     uint16_t sequentNumber = 0;
-    uint16_t clientId = 0;
+    uint16_t adapterId = 0;
   };
 
   std::unique_ptr<rregistry::SubscriptionMap<EntryRecord>> m_records =

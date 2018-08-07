@@ -1,7 +1,6 @@
 #ifndef LRT_RREGISTRY_REGISTRY_HPP
 #define LRT_RREGISTRY_REGISTRY_HPP
 
-#include "DebuggingDataStore.hpp"
 #include "Detail.hpp"
 #include "Entries.hpp"
 #include "PersistencyPolicy.hpp"
@@ -11,6 +10,7 @@
 #include <RComm/LiteCommReliability.hpp>
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <vector>
 
 namespace lrt {
@@ -73,11 +73,12 @@ class Registry
                   rcomm::Reliability reliability = rcomm::DefaultReliability)
   {
     setToArray(property, value);
-    for(auto it = m_adapters.begin(); it != m_adapters.end(); ++it) {
+    for(auto it = m_adapters.begin(); it != m_adapters.end();) {
       if(auto lock = it->lock()) {
         lock->set(property, value, reliability);
+        ++it;
       } else {
-        m_adapters.erase(it);
+        it = m_adapters.erase(it);
       }
     }
     for(auto receiver : m_receivers)
@@ -154,7 +155,7 @@ class Registry
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
-  void setPersistencyPolicy(PersistencyPolicyPtr &&persistencyPolicy)
+  void setPersistencyPolicy(PersistencyPolicyPtr&& persistencyPolicy)
   {
     m_persistencyPolicy = std::move(persistencyPolicy);
   }
@@ -228,6 +229,20 @@ LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
   LRT_RREGISTRY_REGISTRY_GETARRAYFORTYPE_HELPER)
 
 #endif
+}
+
+namespace rcomm {
+template<>
+template<>
+inline void
+LiteCommAdapter<rregistry::Registry>::set(
+  rregistry::String property,
+  typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value,
+  Reliability reliability)
+{
+  // TODO Implement string transmissions.
+  assert(false);
+}
 }
 }
 

@@ -2,7 +2,9 @@
 #define LRT_RSUPPORT_PIPEADAPTER_HPP
 
 #include "RSupport.hpp"
+#include <RCore/transmit_buffer.h>
 #include <RRegistry/Registry.hpp>
+#include <RCore/defaults.h>
 
 namespace lrt {
 namespace rsupport {
@@ -14,7 +16,7 @@ class PipeAdapter : public rregistry::Registry::Adapter
   virtual ~PipeAdapter();
 
   virtual void send(
-    const rregistry::Registry::Adapter::Message& msg,
+    lrt_rcore_transmit_buffer_entry_t* entry,
     rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 
   /**
@@ -37,8 +39,6 @@ class PipeAdapter : public rregistry::Registry::Adapter
   const std::string& outFifo() { return m_outFifo; }
 
   private:
-  rregistry::Registry::Adapter::Message m_message;
-  rregistry::Registry::Adapter::Message::Buffer::iterator m_messageIt;
   int m_in_fd = 0, m_out_fd = 0;
   std::string m_inFifo;
   std::string m_outFifo;
@@ -50,6 +50,7 @@ class PipeAdapter : public rregistry::Registry::Adapter
   };
 
   Mode m_mode = Client;
+  rcomm_handle_t *m_rcomm_handle;
 };
 }
 }

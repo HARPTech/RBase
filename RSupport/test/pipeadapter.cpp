@@ -39,6 +39,8 @@ TEST_CASE("rsupport::PipeAdapter transmissions working.",
   status = adapter1->service();
   REQUIRE(status == RSupportStatus_Updates);
   status = adapter2->service();
+  REQUIRE(status == RSupportStatus_Updates);
+  status = adapter2->service();
   REQUIRE(status == RSupportStatus_Ok);
 
   REQUIRE(adapter1->outFd() > 0);
@@ -48,11 +50,15 @@ TEST_CASE("rsupport::PipeAdapter transmissions working.",
   adapter2->subscribe(Int16::MVMT_FORWARD_VELOCITY);
   status = adapter1->service();
   REQUIRE(status == RSupportStatus_Updates);
+  status = adapter1->service();
+  REQUIRE(status == RSupportStatus_Ok);
 
   adapter1->set(Int16::MVMT_FORWARD_VELOCITY, compare);
 
   status = adapter2->service();
   REQUIRE(status == RSupportStatus_Updates);
+  status = adapter2->service();
+  REQUIRE(status == RSupportStatus_Ok);
 
   REQUIRE(registry2->get(Int16::MVMT_FORWARD_VELOCITY) == compare);
 }

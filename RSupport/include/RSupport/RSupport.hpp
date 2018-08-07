@@ -73,7 +73,9 @@ typedef struct RSupportHandle RSupportHandle;
 /**
  * @brief The default fifo path to use. Should not be overridden by clients.
  */
+#ifndef SWIG
 extern const char* RSupportDefaultFifoPath;
+#endif
 
 /**
  * @brief Converts the given status enum value to a string representation.

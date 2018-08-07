@@ -3,15 +3,14 @@
 
 #include "LiteComm.hpp"
 #include "LiteCommDropper.hpp"
-#include "LiteCommMessage.hpp"
 #include "LiteCommReliability.hpp"
-#include <RRegistry/DebuggingDataStore.hpp>
+#include <RCore/librcp/message.h>
+#include <RCore/transmit_buffer.h>
 #include <RRegistry/SubscriptionMap.hpp>
 #include <RRegistry/TypeConverter.hpp>
 #include <algorithm>
 #include <array>
-#include <cstdint>
-#include <cstring>
+#include <cassert>
 #include <memory>
 
 namespace lrt {
@@ -29,8 +28,6 @@ template<class RegistryClass>
 class LiteCommAdapter
 {
   public:
-  using Message = LiteCommMessage;
-
   /**
    * @brief Defines the internal debug mode of the adapter.
    *
@@ -51,25 +48,99 @@ class LiteCommAdapter
                                rregistry::Type,
                                uint16_t property);
 
-  LiteCommAdapter(
-    std::shared_ptr<RegistryClass> registry,
-    bool subscribed = false,
-    std::shared_ptr<rregistry::DebuggingDataStore> debuggingDataStore = nullptr,
-    const char* adapterName = "Unnamed Adapter",
-    int adapterId = 0)
+#define LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_UPDATE_CASE(CLASS)               \
+  case rregistry::Type::CLASS:                                                 \
+    adapter->m_registry->set(                                                  \
+      static_cast<rregistry::CLASS>(entry->property),                          \
+      lrt_librcp_##CLASS##_from_data(                                          \
+        (const uint8_t*)entry->data->s,                                        \
+        sizeof(rregistry::GetValueTypeOfEntryClass<rregistry::CLASS>::type))); \
+    break;
+#define LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_REQUEST_CASE(CLASS) \
+  case rregistry::Type::CLASS:                                    \
+    adapter->m_registry->setBack(                                 \
+      static_cast<rregistry::CLASS>(entry->property));            \
+    break;
+
+  LiteCommAdapter(::std::shared_ptr<RegistryClass> registry,
+                  bool subscribed = false,
+                  const char* adapterName = "Unnamed Adapter",
+                  int adapterId = 0)
     : m_registry(registry)
-    , m_subscriptions(rregistry::InitSubscriptionMap(subscribed))
-    , m_subscriptionsRemote(rregistry::InitSubscriptionMap(false))
     , m_adapterName(adapterName)
-    , m_debuggingDataStore(debuggingDataStore)
+    , m_subscriptions(::lrt::rregistry::InitSubscriptionMap(subscribed))
+    , m_subscriptionsRemote(::lrt::rregistry::InitSubscriptionMap(false))
     , m_adapterId(adapterId)
   {
-    setDropperPolicy(std::make_unique<LiteCommDropperPolicy>());
+    setDropperPolicy(::std::make_unique<LiteCommDropperPolicy>());
+    m_transmit_buffer.reset(lrt_rcore_transmit_buffer_init());
+    lrt_rcore_transmit_buffer_set_data_ready_cb(
+      m_transmit_buffer.get(),
+      [](lrt_rcore_transmit_buffer_entry_t* entry, void* userdata) {
+        LiteCommAdapter<RegistryClass>* adapter =
+          static_cast<LiteCommAdapter<RegistryClass>*>(userdata);
+        assert(entry != 0);
+        assert(entry->data != 0);
+        assert(entry->data->l >= 0);
+        adapter->send(entry, adapter->m_currentReliability);
+        return LRT_RCORE_OK;
+      },
+      (void*)this);
+    lrt_rcore_transmit_buffer_set_finished_cb(
+      m_transmit_buffer.get(),
+      [](lrt_rcore_transmit_buffer_entry_t* entry, void* userdata) {
+        LiteCommAdapter<RegistryClass>* adapter =
+          static_cast<LiteCommAdapter<RegistryClass>*>(userdata);
+        switch(entry->message_type) {
+          case LRT_RCP_MESSAGE_TYPE_UPDATE: {
+            if(adapter->m_dropperPolicy) {
+              if(adapter->m_dropperPolicy->shouldBeDropped(
+                   entry->reliable,
+                   entry->type,
+                   entry->property,
+                   entry->seq_number,
+                   adapter->m_adapterId)) {
+                return LRT_RCORE_OK;
+              }
+            }
+
+            if(adapter->m_registry) {
+              switch(static_cast<rregistry::Type>(entry->type)) {
+                LRT_RREGISTRY_CPPTYPELIST_HELPER(
+                  LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_UPDATE_CASE)
+                default:
+                  break;
+              }
+            }
+            break;
+          }
+          case LRT_RCP_MESSAGE_TYPE_REQUEST: {
+            LRT_RREGISTRY_TYPETOTEMPLATEFUNCHELPER(
+              static_cast<rregistry::Type>(entry->type),
+              entry->property,
+              adapter->setBack,
+              adapter);
+            break;
+          }
+          case LRT_RCP_MESSAGE_TYPE_SUBSCRIBE: {
+            (*adapter->m_subscriptions)[entry->type][entry->property] = true;
+            break;
+          }
+          case LRT_RCP_MESSAGE_TYPE_UNSUBSCRIBE: {
+            (*adapter->m_subscriptions)[entry->type][entry->property] = false;
+            break;
+          }
+        }
+        return LRT_RCORE_OK;
+      },
+      (void*)this);
   }
   virtual ~LiteCommAdapter()
   {
     if(m_registry)
       m_registry->removeAdapter(this);
+    m_subscriptions.reset();
+    m_subscriptionsRemote.reset();
   }
 
   void setDropperPolicy(LiteCommDropperPolicyPtr policy)
@@ -85,11 +156,21 @@ class LiteCommAdapter
    * implementations have to do to be able to send messages is to implement the
    * transmission of Message structs for the length Message::length()
    */
-  virtual void send(const Message& msg,
+  virtual void send(lrt_rcore_transmit_buffer_entry_t* entry,
                     const Reliability = DefaultReliability) = 0;
 
+#define LRT_RCOMM_LITECOMMADAPTER_SET_CASE(CLASS)                    \
+  case rregistry::Type::CLASS:                                       \
+    lrt_rcore_transmit_buffer_send_##CLASS(                          \
+      m_transmit_buffer.get(),                                       \
+      type,                                                          \
+      static_cast<uint16_t>(property),                               \
+      value,                                                         \
+      reliability_contains(reliability, Reliability::Acknowledged)); \
+    break;
+
   template<class TypeCategory>
-  void set(
+  inline void set(
     TypeCategory property,
     typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value,
     Reliability reliability = DefaultReliability)
@@ -100,104 +181,19 @@ class LiteCommAdapter
     if(!m_acceptProperty)
       return;
 
-    if(m_dictionary && GetEnumTypeOfEntryClass(property) == Type::Bool) {
-      // This variant is currently only used between RMaster and RBReakout,
-      // which is why there is no receive logic implemented.
-
-      // Check if this is the trigger property.
-      const LiteCommDictEntry* entry = GetDictEntryForTriggerProperty(
-        static_cast<Bool>(property), m_dictionary);
-      if(entry != nullptr) {
-        // This transforms the current update to a burst update.
-        m_sendMessage.buf[0] = entry->id | (1 << 7);
-        m_sendMessage.buf[1] = 0;
-        for(std::size_t i = 0; i < entry->length; ++i) {
-          const LiteCommDictEntryHandler* handler = &entry->handlers[i];
-          // Append each individual property to the message.
-          switch(handler->propertyType) {
-            case Type::Uint8:
-              m_sendMessage.buf[i + 2] =
-                m_registry->get(static_cast<Uint8>(handler->prop));
-              break;
-            case Type::Int8: {
-              int8_t val = m_registry->get(static_cast<Int8>(handler->prop));
-              if(val < 0) {
-                m_sendMessage.setSingleBit(i + 8);
-                val = -val;
-              }
-              m_sendMessage.buf[i + 2] = static_cast<uint8_t>(val);
-              break;
-            }
-            case Type::Int16: {
-              int16_t val = m_registry->get(static_cast<Int16>(handler->prop));
-              if(val < 0) {
-                m_sendMessage.setSingleBit(i + 8);
-                val = -val;
-              }
-              // Stop overflow errors.
-              if(abs(val) > 255)
-                val = 255;
-              m_sendMessage.buf[i + 2] = static_cast<uint8_t>(val);
-              break;
-            }
-            default:
-              // Not supported!
-              return;
-              break;
-          }
-        }
-        m_sendMessage.explicit_length = entry->length + 2;
-
-        // Message is ready to be sent!
-        send(m_sendMessage, reliability);
-
-        // Set the burst request to false.
-        m_acceptProperty = false;
-        m_registry->set(static_cast<Bool>(property), false);
-        m_acceptProperty = true;
-
-        return;
-      }
-    }
-
     // Check if the property has been subscribed by the current adapter.
-    if(!(*m_subscriptions)[static_cast<std::size_t>(
-         rregistry::GetEnumTypeOfEntryClass(property))]
-                          [static_cast<uint32_t>(property)])
+    uint8_t type =
+      static_cast<uint8_t>(rregistry::GetEnumTypeOfEntryClass(property));
+
+    if(!(*m_subscriptions)[type][static_cast<uint32_t>(property)])
       return;
 
-    LiteCommData lData;
+    m_currentReliability = reliability;
 
-    LiteCommData::fromType(lData, value);
-
-    // Copy into the message.
-    m_sendMessage.setLType(LiteCommType::Update, reliability);
-
-    m_sendMessage.setType(GetEnumTypeOfEntryClass(property));
-    m_sendMessage.setProperty(static_cast<uint16_t>(property));
-
-    auto it = m_sendMessage.begin();
-    for(size_t i = 0; i < 8; ++i)
-      (*it++) = lData.byte[i];
-
-    send(m_sendMessage, reliability);
-
-    // Check if the message is a string and handle the string uniquely.
-    if(GetEnumTypeOfEntryClass(property) == rregistry::Type::String) {
-      std::size_t stringLength = lData.Int32;
-      for(std::size_t i = 0; i < stringLength; i += 8) {
-        // The fromType iterates i up to the point it needs to run again,
-        // because internally it copies as much as possible from the string
-        // into the byte[] buffer of data. After each run, the resulting data
-        // should be sent as an LiteCommType::Append message.
-
-        LiteCommData::fromType(lData, value, i + 1);
-
-        append(property, lData, reliability);
-
-        for(std::size_t n = 0; n < sizeof(LiteCommData); ++n)
-          lData.byte[n] = '\n';
-      }
+    switch(rregistry::GetEnumTypeOfEntryClass(property)) {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER(LRT_RCOMM_LITECOMMADAPTER_SET_CASE)
+      default:
+        break;
     }
   }
 
@@ -206,15 +202,31 @@ class LiteCommAdapter
                                   rcomm::LiteCommType lType,
                                   Reliability reliability = DefaultReliability)
   {
-    using namespace rcomm;
-
-    // Copy into the message.
-    m_sendMessage.setLType(lType, reliability);
-    m_sendMessage.setType(GetEnumTypeOfEntryClass(property));
-    m_sendMessage.setProperty(
-      static_cast<decltype(LiteCommProp::property)>(property));
-
-    send(m_sendMessage, reliability);
+    m_currentReliability = reliability;
+    lrt_rcp_message_type_t messageType;
+    switch(lType) {
+      case rcomm::LiteCommType::Update:
+        messageType = LRT_RCP_MESSAGE_TYPE_UPDATE;
+        break;
+      case rcomm::LiteCommType::Request:
+        messageType = LRT_RCP_MESSAGE_TYPE_REQUEST;
+        break;
+      case rcomm::LiteCommType::Subscribe:
+        messageType = LRT_RCP_MESSAGE_TYPE_SUBSCRIBE;
+        break;
+      case rcomm::LiteCommType::Unsubscribe:
+        messageType = LRT_RCP_MESSAGE_TYPE_UNSUBSCRIBE;
+        break;
+      default:
+        messageType = LRT_RCP_MESSAGE_TYPE_REQUEST;
+        break;
+    }
+    lrt_rcore_transmit_buffer_send_ctrl(
+      m_transmit_buffer.get(),
+      static_cast<uint8_t>(rregistry::GetEnumTypeOfEntryClass(property)),
+      static_cast<uint16_t>(property),
+      messageType,
+      reliability_contains(reliability, Reliability::Acknowledged));
   }
 
   template<typename TypeCategory>
@@ -255,6 +267,8 @@ class LiteCommAdapter
     switch(type) {
       LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
         LRT_RCOMM_LITECOMMADAPTER_REQUESTBYTYPEVAL_CASE)
+      default:
+        break;
     }
   }
 #define LRT_RCOMM_LITECOMMADAPTER_SUBSCRIBEBYTYPEVAL_CASE(CLASS) \
@@ -267,6 +281,8 @@ class LiteCommAdapter
     switch(type) {
       LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
         LRT_RCOMM_LITECOMMADAPTER_SUBSCRIBEBYTYPEVAL_CASE)
+      default:
+        break;
     }
   }
 #define LRT_RCOMM_LITECOMMADAPTER_UNSUBSCRIBEBYTYPEVAL_CASE(CLASS) \
@@ -279,6 +295,8 @@ class LiteCommAdapter
     switch(type) {
       LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
         LRT_RCOMM_LITECOMMADAPTER_UNSUBSCRIBEBYTYPEVAL_CASE)
+      default:
+        break;
     }
   }
 
@@ -302,165 +320,6 @@ class LiteCommAdapter
     return (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                                    [static_cast<uint32_t>(property)];
-  }
-  template<typename TypeCategory>
-  inline void append(TypeCategory property,
-                     const LiteCommData& data,
-                     Reliability reliability = DefaultReliability)
-  {
-    using namespace rcomm;
-
-    m_sendMessage.setLType(LiteCommType::Append, reliability);
-    m_sendMessage.setType(GetEnumTypeOfEntryClass(property));
-    m_sendMessage.setProperty(
-      static_cast<decltype(LiteCommProp::property)>(property));
-
-    // Write the data to be appended.
-    auto it = m_sendMessage.begin();
-    for(size_t i = 0; i < 8; ++i)
-      (*it++) = data.byte[i];
-
-    send(m_sendMessage, reliability);
-  }
-
-  MessageParseError parseMessage(const Message& msg)
-  {
-    using namespace rcomm;
-
-    rregistry::Type type = msg.getType();
-    if(type >= rregistry::Type::_COUNT)
-      return MessageTypeInvalid;
-
-    if(m_dropperPolicy) {
-      if(m_dropperPolicy->shouldBeDropped(msg)) {
-        return MessageDropped;
-      }
-    }
-
-    thread_local LiteCommData lData;
-    thread_local LiteCommDebugPos lDebugPos;
-
-    uint16_t clientId = m_adapterId;
-    if(msg.lType() == LiteCommType::Lossy)
-      clientId = msg.getClientId();
-
-    uint16_t property = msg.getProperty();
-
-    if(property >= rregistry::GetEntryCount(type))
-      return RegistryTypeInvalid;
-
-    auto it = msg.begin();
-
-    switch(msg.realLType()) {
-      case LiteCommType::Update:
-        for(size_t i = 0; i < 8; ++i) {
-          lData.byte[i] = (*it++);
-          m_lastData.byte[i] = lData.byte[i];
-        }
-
-        m_acceptProperty = false;
-        SetLiteCommDataToRegistry(type, property, lData, m_registry);
-        m_acceptProperty = true;
-
-        // If there is a consistency policy in place, write the new value
-        // into that.
-        if(m_registry->m_persistencyPolicy) {
-          auto persistencyPolicy = m_registry->m_persistencyPolicy.get();
-
-          if(type == rregistry::Type::Bool &&
-             property == static_cast<uint16_t>(rregistry::Bool::PERS_ENABLE)) {
-            if(lData.Bool && !m_registry->get(rregistry::Bool::PERS_ACTIVE)) {
-              persistencyPolicy->enable();
-              m_registry->set(rregistry::Bool::PERS_ACTIVE, true);
-            } else if(!lData.Bool &&
-                      m_registry->get(rregistry::Bool::PERS_ACTIVE)) {
-              persistencyPolicy->disable();
-              m_registry->set(rregistry::Bool::PERS_ACTIVE, false);
-            }
-          }
-          if(m_registry->get(rregistry::Bool::PERS_ACTIVE)) {
-            persistencyPolicy->push(clientId, type, property, lData);
-          }
-        }
-
-        // There was a set (= update), so the internal debugging state has to
-        // be updated to reflect this change.
-        m_debugState = DebugMode::SetReceived;
-        break;
-      case LiteCommType::Append:
-        // Currently, only rregistry::String needs to be appended because of
-        // the varying length. This is why only the rregistry::Type::String
-        // case is handled in this case.
-        for(size_t i = 0; i < 8; ++i)
-          lData.byte[i] = (*it++);
-
-        if(type == rregistry::Type::String) {
-          auto str = m_registry->getPtrFromArray(
-            static_cast<rregistry::String>(property));
-#ifdef LRT_STRING_TYPE_STD
-          std::size_t it = str->find('\0');
-          for(std::size_t i = 0; i < 8; ++i, ++it)
-            (*str)[it] = lData.byte[i];
-#else
-          auto it = std::find(str[0], str[std::strlen(str)], '\0');
-          std::copy(lData.byte[0], lData.byte[sizeof(lData)], it);
-#endif
-        }
-        break;
-      case LiteCommType::Request:
-        LRT_RREGISTRY_TYPETOTEMPLATEFUNCHELPER(type, property, setBack, this);
-        break;
-      case LiteCommType::Subscribe:
-        (*m_subscriptions)[static_cast<std::size_t>(type)][property] = true;
-        break;
-      case LiteCommType::Unsubscribe:
-        (*m_subscriptions)[static_cast<std::size_t>(type)][property] = false;
-        break;
-      case LiteCommType::Debug:
-        if(m_debuggingDataStore) {
-          // Read the debugging data, which is an int32 value with 4 byte
-          // length.
-          lDebugPos.read(it);
-
-          switch(m_debugState) {
-            case DebugMode::WaitingForSet:
-              // The received event must be a Get-notification, because no Set
-              // has been issued.
-              // Generate the data which is received. This should be the value
-              // of the property at the time of this request.
-              LiteCommData::fromRegistry(m_registry, lData, type, property);
-
-              m_debuggingDataStore->getOp(m_adapterName,
-                                          m_adapterId,
-                                          type,
-                                          property,
-                                          lData,
-                                          lDebugPos.pos);
-              break;
-            case DebugMode::SetReceived:
-              // The received event must be a Set-notification, because the
-              // last received update was a set too. After this notification,
-              // the internal state will immediately be switched to
-              // DebugMode::WaitingForSet again to process any following
-              // Get-notifications.
-              m_debugState = DebugMode::WaitingForSet;
-
-              m_debuggingDataStore->setOp(m_adapterName,
-                                          m_adapterId,
-                                          type,
-                                          property,
-                                          m_lastData,
-                                          lDebugPos.pos);
-              break;
-          }
-        }
-        break;
-      default:
-        // Type not supported or invalid.
-        return MessageTypeInvalid;
-    }
-    callMessageCallback(msg.lType(), type, property);
-    return Success;
   }
 
   void setMessageCallback(LiteCommType type, MsgCallback cb)
@@ -501,7 +360,6 @@ class LiteCommAdapter
   }
 
   std::shared_ptr<RegistryClass> m_registry;
-  std::shared_ptr<rregistry::DebuggingDataStore> m_debuggingDataStore;
 
   bool m_acceptProperty = true;
   const char* m_adapterName;
@@ -509,20 +367,17 @@ class LiteCommAdapter
   std::unique_ptr<rregistry::SubscriptionMap<bool>> m_subscriptions;
   std::unique_ptr<rregistry::SubscriptionMap<bool>> m_subscriptionsRemote;
 
-  DebugMode m_debugState = DebugMode::WaitingForSet;
-  rregistry::Type m_lastSetType;
-  uint16_t m_lastSetProperty;
-  LiteCommData m_lastData;
   int m_adapterId = 0;
   const rcomm::LiteCommDict* m_dictionary = nullptr;
-
-  Message m_sendMessage;
 
   MsgCallback m_messageCallback[static_cast<size_t>(LiteCommType::_COUNT)] = {
     nullptr
   };
 
   LiteCommDropperPolicyPtr m_dropperPolicy;
+
+  RCore::TransmitBufferPtr m_transmit_buffer;
+  Reliability m_currentReliability;
 };
 }
 }

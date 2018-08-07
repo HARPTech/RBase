@@ -1,6 +1,7 @@
 #ifndef LRT_RSUPPORT_CONSOLEADAPTER_HPP
 #define LRT_RSUPPORT_CONSOLEADAPTER_HPP
 
+#include <RCore/defaults.h>
 #include <RRegistry/Registry.hpp>
 #include <functional>
 #include <vector>
@@ -24,7 +25,7 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
   virtual ~ConsoleAdapter();
 
   virtual void send(
-    const rregistry::Registry::Adapter::Message& msg,
+    lrt_rcore_transmit_buffer_entry_t* entry,
     rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 
   void addCallback(WriteCallback cb) { m_callbacks.push_back(cb); }
@@ -36,10 +37,11 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
   void parseBase64(std::string base64);
 
   private:
-  Message m_inputMessage;
   std::vector<WriteCallback> m_callbacks;
   Mode m_mode = STDOUT;
   int m_readTimeout = 0;
+
+  rcomm_handle_t *m_rcomm_handle;
 };
 }
 }

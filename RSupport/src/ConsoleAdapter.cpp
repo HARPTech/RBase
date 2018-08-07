@@ -1,4 +1,5 @@
 #include "../include/RSupport/ConsoleAdapter.hpp"
+#include <RCore/transmit_buffer.h>
 #include <RRegistry/Detail.hpp>
 #include <algorithm>
 #include <iostream>
@@ -15,61 +16,86 @@ using std::clog;
 using std::cout;
 using std::endl;
 
+LRT_RCOMM_UNIVERSAL();
+
 namespace lrt {
 namespace rsupport {
 ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
                                bool subscribedToAll)
   : rregistry::Registry::Adapter(registry, subscribedToAll)
 {
+  m_rcomm_handle = rcomm_create();
+
+  rcomm_set_transmit_cb(
+    m_rcomm_handle,
+    [](const uint8_t* data, void* userdata, size_t bytes) {
+      ConsoleAdapter* adapter = static_cast<ConsoleAdapter*>(userdata);
+      using namespace boost::archive::iterators;
+      typedef base64_from_binary<transform_width<const uint8_t*, 6, 8>>
+        base64Iterator;
+
+      int writePaddChars = (3 - bytes % 3) % 3 + 1;
+
+      if(adapter->m_mode & STDOUT) {
+        // Output the new data to the console directly.
+        cout << "!:";
+        std::copy(base64Iterator(data),
+                  base64Iterator(data + bytes),
+                  std::ostreambuf_iterator<char>(cout));
+
+        while(writePaddChars >= 0) {
+          cout << "=";
+          writePaddChars--;
+        }
+        cout << endl;
+      }
+      if(adapter->m_mode & CALLBACK) {
+        // Output the data to all callbacks.
+        std::string outStr = "";
+        outStr.reserve(20);
+        outStr =
+          std::string(base64Iterator(data), base64Iterator(data + bytes));
+        outStr = "!:" + outStr;
+        while(writePaddChars >= 0) {
+          outStr.append("=");
+          writePaddChars--;
+        }
+        outStr.append("\n");
+        for(auto cb : adapter->m_callbacks) {
+          cb(outStr);
+        }
+      }
+      return LRT_RCORE_OK;
+    },
+    this);
+  rcomm_set_accept_cb(
+    m_rcomm_handle,
+    [](rcomm_block_t* block, void* userdata) {
+      ConsoleAdapter* adapter = static_cast<ConsoleAdapter*>(userdata);
+
+      rcomm_transfer_block_to_tb(
+        adapter->m_rcomm_handle, block, adapter->m_transmit_buffer.get());
+
+      return LRT_RCORE_OK;
+    },
+    this);
 }
-ConsoleAdapter::~ConsoleAdapter() {}
+ConsoleAdapter::~ConsoleAdapter()
+{
+  rcomm_free(m_rcomm_handle);
+}
 
 void
-ConsoleAdapter::send(const rregistry::Registry::Adapter::Message& msg,
+ConsoleAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
                      rcomm::Reliability reliability)
 {
-  using namespace boost::archive::iterators;
-  typedef base64_from_binary<
-    transform_width<Message::Buffer::const_iterator, 6, 8>>
-    base64Iterator;
-
-  int writePaddChars = (3 - msg.length() % 3) % 3 + 1;
-
-  if(m_mode & STDOUT) {
-    // Output the new data to the console directly.
-    cout << "!:";
-    std::copy(base64Iterator(msg.buf.begin()),
-              base64Iterator(msg.buf.begin() + msg.length()),
-              std::ostreambuf_iterator<char>(cout));
-
-    while(writePaddChars >= 0) {
-      cout << "=";
-      writePaddChars--;
-    }
-    cout << endl;
-  }
-  if(m_mode & CALLBACK) {
-    // Output the data to all callbacks.
-    std::string outStr = "";
-    outStr.reserve(20);
-    outStr = std::string(base64Iterator(msg.buf.begin()),
-                         base64Iterator(msg.buf.begin() + msg.length()));
-    outStr = "!:" + outStr;
-    while(writePaddChars >= 0) {
-      outStr.append("=");
-      writePaddChars--;
-    }
-    outStr.append("\n");
-    for(auto cb : m_callbacks) {
-      cb(outStr);
-    }
-  }
+  rcomm_send_tb_entry(m_rcomm_handle, entry);
 }
 void
 ConsoleAdapter::read()
 {
   if(m_readTimeout < 10) {
-    m_readTimeout ++;
+    m_readTimeout++;
     return;
   }
   std::string line;
@@ -98,10 +124,13 @@ ConsoleAdapter::parseBase64(std::string base64)
     base64 = base64.substr(0, base64.find('\n'));
     std::replace(base64.begin(), base64.end(), '=', 'A');
 
-    std::copy(binaryIt(base64.begin()),
-              binaryIt(base64.end()),
-              m_inputMessage.buf.begin());
-    parseMessage(m_inputMessage);
+    std::string binaryStr =
+      std::string(binaryIt(base64.begin()), binaryIt(base64.end()));
+
+    rcomm_parse_bytes(m_rcomm_handle,
+                      reinterpret_cast<const uint8_t*>(binaryStr.data()),
+                      binaryStr.length());
+
   } catch(dataflow_exception& e) {
     clog << "Invalid base64: \"" << base64 << "\"" << endl
          << "Error: " << e.what();

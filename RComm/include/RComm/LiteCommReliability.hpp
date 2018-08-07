@@ -16,6 +16,12 @@ operator|(Reliability a, Reliability b)
 }
 const Reliability DefaultReliability =
   Reliability::Ordered | Reliability::Acknowledged;
+
+inline bool
+reliability_contains(Reliability hay, Reliability needle)
+{
+  return (static_cast<uint8_t>(hay) & static_cast<uint8_t>(needle));
+}
 }
 }
 

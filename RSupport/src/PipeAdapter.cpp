@@ -1,4 +1,6 @@
 #include "../include/RSupport/PipeAdapter.hpp"
+#include <RCore/defaults.h>
+#include <RCore/rcomm.h>
 #include <algorithm>
 #include <array>
 #include <fcntl.h>
@@ -9,6 +11,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+LRT_RCOMM_UNIVERSAL_DEFINITIONS()
+
 using std::cout;
 using std::endl;
 
@@ -16,16 +20,39 @@ namespace lrt {
 namespace rsupport {
 PipeAdapter::PipeAdapter(std::shared_ptr<rregistry::Registry> registry,
                          bool subscribedToAll)
-  : LiteCommAdapter(registry, subscribedToAll, nullptr, "PipeAdapter", 2)
-  , m_messageIt(m_message.buf.begin())
-{}
-PipeAdapter::~PipeAdapter() {}
+  : LiteCommAdapter(registry, subscribedToAll, "PipeAdapter", 2)
+{
+  m_rcomm_handle = rcomm_create();
+  rcomm_set_transmit_cb(
+    m_rcomm_handle,
+    [](const uint8_t* data, void* userdata, size_t bytes) {
+      PipeAdapter* adapter = static_cast<PipeAdapter*>(userdata);
+      write(adapter->m_out_fd, static_cast<const void*>(data), bytes);
+      return LRT_RCORE_OK;
+    },
+    this);
+  rcomm_set_accept_cb(
+    m_rcomm_handle,
+    [](rcomm_block_t* block, void* userdata) {
+      PipeAdapter* adapter = static_cast<PipeAdapter*>(userdata);
+
+      rcomm_transfer_block_to_tb(
+        adapter->m_rcomm_handle, block, adapter->m_transmit_buffer.get());
+
+      return LRT_RCORE_OK;
+    },
+    this);
+}
+PipeAdapter::~PipeAdapter()
+{
+  rcomm_free(m_rcomm_handle);
+}
 
 void
-PipeAdapter::send(const rregistry::Registry::Adapter::Message& msg,
+PipeAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
                   rcomm::Reliability reliability)
 {
-  write(m_out_fd, static_cast<const void*>(&msg.buf[0]), msg.length());
+  rcomm_send_tb_entry(m_rcomm_handle, entry);
 }
 RSupportStatus
 PipeAdapter::connect(const char* pipe)
@@ -86,7 +113,7 @@ PipeAdapter::service()
 {
   const std::size_t bufferSize = 200;
 
-  std::array<char, bufferSize> buffer;
+  std::array<uint8_t, bufferSize> buffer;
 
   ssize_t ssize = read(m_in_fd, &buffer, bufferSize);
   if(ssize > 0) {
@@ -104,34 +131,9 @@ PipeAdapter::service()
     // Copy the received bytes into the internal buffer and wait as long as it
     // takes for the specified message length to arrive.
 
-    auto it = buffer.begin();
-    while(size > 0) {
-      if(m_messageIt == m_message.buf.begin()) {
-        // Begin of new message.
+    rcomm_parse_bytes(
+      m_rcomm_handle, static_cast<const uint8_t*>(buffer.data()), size);
 
-        // Get the type of the new message;
-        (*m_messageIt++) = (*it++);
-        --size;
-      }
-
-      std::size_t remainingBytes = m_message.remainingBytes(m_messageIt);
-
-      if(remainingBytes > 0 && size > 0) {
-        std::size_t copyBytes = std::min(remainingBytes, size);
-        for(std::size_t i = 0; i < copyBytes; ++i)
-          (*m_messageIt++) = (*it++);
-        remainingBytes -= copyBytes;
-        size -= copyBytes;
-      }
-
-      if(remainingBytes == 0) {
-        auto status = parseMessage(m_message);
-        if(status != rcomm::Success) {
-          cout << "Parse Error in message received from Pipe.";
-        }
-        m_messageIt = m_message.buf.begin();
-      }
-    }
     return RSupportStatus_Updates;
   }
 

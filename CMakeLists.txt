@@ -40,6 +40,8 @@ if(testing)
 		add_subdirectory(test)
 endif()
 
+add_subdirectory(RCore)
+
 add_subdirectory(RComm)
 add_subdirectory(RRegistry)
 add_subdirectory(RSupport)
