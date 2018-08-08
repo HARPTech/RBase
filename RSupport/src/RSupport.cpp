@@ -4,8 +4,8 @@
 #include <thread>
 
 #include "../include/RSupport/ConsoleAdapter.hpp"
-#include "../include/RSupport/PipeAdapter.hpp"
 #include "../include/RSupport/RSupport.hpp"
+#include "../include/RSupport/SocketClientAdapter.hpp"
 #include <RRegistry/Entries.hpp>
 
 const char* RSupportStatusNames[RSupportStatus__Count] = {
@@ -23,7 +23,7 @@ const char* RSupportOptionNames[RSupportOption__Count] = {
   "Automatic Movement Updates"
 };
 
-const char* RSupportDefaultFifoPath = "/tmp/lrt_pipe_path.pipe";
+const char* RSupportDefaultSocketPath = "/tmp/lrt_rmaster.socket";
 
 const char*
 rsupport_status_msg(RSupportStatus status)
@@ -54,9 +54,10 @@ rsupport_handle_create(bool subscribedToAll)
       handle->registry, subscribedToAll);
     handle->registry->registerAdapter(handle->consoleAdapter);
   } else {
-    handle->pipeAdapter = std::make_shared<lrt::rsupport::PipeAdapter>(
-      handle->registry, subscribedToAll);
-    handle->registry->registerAdapter(handle->pipeAdapter);
+    handle->socketClientAdapter =
+      std::make_shared<lrt::rsupport::SocketClientAdapter>(handle->registry,
+                                                           subscribedToAll);
+    handle->registry->registerAdapter(handle->socketClientAdapter);
   }
 
   // Set default options.
@@ -69,8 +70,8 @@ rsupport_handle_create(bool subscribedToAll)
 RSupportStatus
 rsupport_handle_free(RSupportHandle* handle)
 {
-  if(handle->pipeAdapter)
-    handle->registry->removeAdapter(handle->pipeAdapter);
+  if(handle->socketClientAdapter)
+    handle->registry->removeAdapter(handle->socketClientAdapter);
   if(handle->consoleAdapter)
     handle->registry->removeAdapter(handle->consoleAdapter);
   delete handle;
@@ -122,23 +123,24 @@ rsupport_handle_service(RSupportHandle* handle)
   RSupportStatus status = RSupportStatus_Ok;
 
   // Service at the end to get the newest updates.
-  if(handle->pipeAdapter)
-    status = handle->pipeAdapter->service();
+  if(handle->socketClientAdapter)
+    status = handle->socketClientAdapter->service();
 
   return status;
 }
 
-const char*
-getPipePath(const char* pipe)
+static const char*
+getSocketPath(const char* path)
 {
-  if(pipe == nullptr || pipe == 0 || strcmp(pipe, "") == 0) {
+  if(path == nullptr || path == 0 || strcmp(path, "") == 0) {
     // Receive pipe path.
-    const char* env_path = std::getenv("LRT_PIPE_PATH");
+    const char* env_path = std::getenv("LRT_SOCKET_PATH");
     if(env_path == 0) {
-      env_path = "/tmp/lrt_pipe_path.pipe";
+      env_path = RSupportDefaultSocketPath;
     }
+    path = env_path;
   }
-  return pipe;
+  return path;
 }
 
 RSupportStatus
@@ -163,17 +165,17 @@ rsupport_handle_get_option(RSupportHandle* handle, RSupportOption option)
 RSupportStatus
 rsupport_handle_connect(RSupportHandle* handle, const char* pipe)
 {
-  pipe = getPipePath(pipe);
+  pipe = getSocketPath(pipe);
   RSupportStatus status = RSupportStatus_Ok;
-  if(handle->pipeAdapter) {
-    status = handle->pipeAdapter->connect(pipe);
+  if(handle->socketClientAdapter) {
+    status = handle->socketClientAdapter->connect(pipe);
 
     if(status != RSupportStatus_Ok)
       return status;
 
     // Check if there are any options that need to be sent to the other side.
     if(rsupport_handle_get_option(handle, RSupportOption_AutoFrequency))
-      handle->pipeAdapter->subscribe(
+      handle->socketClientAdapter->subscribe(
         lrt::rregistry::Uint8::REGULATION_KERNEL_FREQUENCY);
   }
 
@@ -183,10 +185,10 @@ rsupport_handle_connect(RSupportHandle* handle, const char* pipe)
 RSupportStatus
 rsupport_handle_connect_create(RSupportHandle* handle, const char* pipe)
 {
-  pipe = getPipePath(pipe);
+  pipe = getSocketPath(pipe);
   RSupportStatus status = RSupportStatus_Ok;
-  if(handle->pipeAdapter)
-    status = handle->pipeAdapter->create(pipe);
+  if(handle->socketClientAdapter)
+    status = handle->socketClientAdapter->connect(pipe);
   return status;
 }
 
@@ -194,8 +196,8 @@ RSupportStatus
 rsupport_handle_disconnect(RSupportHandle* handle)
 {
   RSupportStatus status = RSupportStatus_Ok;
-  if(handle->pipeAdapter)
-    status = handle->pipeAdapter->disconnect();
+  if(handle->socketClientAdapter)
+    status = handle->socketClientAdapter->disconnect();
   return status;
 }
 
@@ -227,8 +229,8 @@ rsupport_handle_subscribe(RSupportHandle* handle,
                           uint16_t type,
                           uint16_t property)
 {
-  if(handle->pipeAdapter)
-    handle->pipeAdapter->subscribeByTypeVal(
+  if(handle->socketClientAdapter)
+    handle->socketClientAdapter->subscribeByTypeVal(
       static_cast<lrt::rregistry::Type>(type), property);
   if(handle->consoleAdapter)
     handle->consoleAdapter->subscribeByTypeVal(
@@ -239,8 +241,8 @@ rsupport_handle_unsubscribe(RSupportHandle* handle,
                             uint16_t type,
                             uint16_t property)
 {
-  if(handle->pipeAdapter)
-    handle->pipeAdapter->unsubscribeByTypeVal(
+  if(handle->socketClientAdapter)
+    handle->socketClientAdapter->unsubscribeByTypeVal(
       static_cast<lrt::rregistry::Type>(type), property);
   if(handle->consoleAdapter)
     handle->consoleAdapter->unsubscribeByTypeVal(
@@ -251,8 +253,8 @@ rsupport_handle_request(RSupportHandle* handle,
                         uint16_t type,
                         uint16_t property)
 {
-  if(handle->pipeAdapter)
-    handle->pipeAdapter->requestByTypeVal(
+  if(handle->socketClientAdapter)
+    handle->socketClientAdapter->requestByTypeVal(
       static_cast<lrt::rregistry::Type>(type), property);
   if(handle->consoleAdapter)
     handle->consoleAdapter->requestByTypeVal(

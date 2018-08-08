@@ -10,7 +10,8 @@
  * and also exposed with a SWIG bindings generator.
  */
 
-typedef enum RSupportStatus {
+typedef enum RSupportStatus
+{
   RSupportStatus_Ok,
   RSupportStatus_CouldNotOpenFIFOs,
   RSupportStatus_ConnectionFailed,
@@ -22,7 +23,8 @@ typedef enum RSupportStatus {
   RSupportStatus__Count
 } RSupportStatus;
 
-typedef enum RSupportOption {
+typedef enum RSupportOption
+{
   RSupportOption_AutoFrequency,
   RSupportOption_AutoMovementBurst,
   RSupportOption__Count
@@ -35,7 +37,7 @@ typedef enum RSupportOption {
 
 namespace lrt {
 namespace rsupport {
-class PipeAdapter;
+class SocketClientAdapter;
 class ConsoleAdapter;
 }
 }
@@ -54,7 +56,7 @@ class ConsoleAdapter;
 struct RSupportHandle
 {
   std::shared_ptr<lrt::rregistry::Registry> registry;
-  std::shared_ptr<lrt::rsupport::PipeAdapter> pipeAdapter;
+  std::shared_ptr<lrt::rsupport::SocketClientAdapter> socketClientAdapter;
   std::shared_ptr<lrt::rsupport::ConsoleAdapter> consoleAdapter;
   std::bitset<RSupportOption__Count> options;
   std::chrono::system_clock::time_point frameStart =
@@ -62,250 +64,224 @@ struct RSupportHandle
   uint64_t frameTime = 0;
 };
 
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct RSupportHandle RSupportHandle;
+  typedef struct RSupportHandle RSupportHandle;
 
 /**
  * @brief The default fifo path to use. Should not be overridden by clients.
  */
 #ifndef SWIG
-extern const char* RSupportDefaultFifoPath;
+  extern const char* RSupportDefaultFifoPath;
 #endif
 
-/**
- * @brief Converts the given status enum value to a string representation.
- *
- * @param status The status to convert.
- * @return The name/description of the given status.
- */
-const char*
-rsupport_status_msg(RSupportStatus status);
+  /**
+   * @brief Converts the given status enum value to a string representation.
+   *
+   * @param status The status to convert.
+   * @return The name/description of the given status.
+   */
+  const char* rsupport_status_msg(RSupportStatus status);
 
-/**
- * @brief Converts the given option enum value to a string representation.
- *
- * @param option The option to convert.
- * @return The name/description of the given option.
- */
-const char*
-rsupport_option_msg(RSupportOption option);
+  /**
+   * @brief Converts the given option enum value to a string representation.
+   *
+   * @param option The option to convert.
+   * @return The name/description of the given option.
+   */
+  const char* rsupport_option_msg(RSupportOption option);
 
-/**
- * @brief Creates the handle and initializes all internal fields.
- *
- * @param subscribedToAll Subscribed to all registry values, useful for clients.
- * @return The created handle. Caller is responsible for freeing the pointer
- * using rsupport_handle_free().
- */
-RSupportHandle*
-rsupport_handle_create(bool subscribedToAll);
+  /**
+   * @brief Creates the handle and initializes all internal fields.
+   *
+   * @param subscribedToAll Subscribed to all registry values, useful for
+   * clients.
+   * @return The created handle. Caller is responsible for freeing the pointer
+   * using rsupport_handle_free().
+   */
+  RSupportHandle* rsupport_handle_create(bool subscribedToAll);
 
-/**
- * @brief Frees the handle created with rsupport_handle_create().
- *
- * Internally also sets default options: RSupportOption_AutoFrequency and
- * RSupportOption_AutoMovementBurst are both set to true.
- *
- * @param handle The handle to free.
- * @return RSupportStatus_Ok on success.
- */
-RSupportStatus
-rsupport_handle_free(RSupportHandle* handle);
+  /**
+   * @brief Frees the handle created with rsupport_handle_create().
+   *
+   * Internally also sets default options: RSupportOption_AutoFrequency and
+   * RSupportOption_AutoMovementBurst are both set to true.
+   *
+   * @param handle The handle to free.
+   * @return RSupportStatus_Ok on success.
+   */
+  RSupportStatus rsupport_handle_free(RSupportHandle* handle);
 
-/**
- * @brief Connect the handle to the given pipe-path.
- *
- * @param handle The handle to initiate the connection in.
- * @param pipe The pipe to use. Can be an empty string or nullptr and will be
- * assigned to a default location.
- * @return RSupportStatus_Ok on success.
- */
-RSupportStatus
-rsupport_handle_connect(RSupportHandle* handle, const char* pipe);
+  /**
+   * @brief Connect the handle to the given pipe-path.
+   *
+   * @param handle The handle to initiate the connection in.
+   * @param pipe The pipe to use. Can be an empty string or nullptr and will be
+   * assigned to a default location.
+   * @return RSupportStatus_Ok on success.
+   */
+  RSupportStatus rsupport_handle_connect(RSupportHandle* handle,
+                                         const char* pipe);
 
-/**
- * @brief Create the host (initial fifo creation).
- *
- * @param handle The handle to use in the creation of the host.
- * @param pipe The pipe to use. Can be an empty string or nullptr and will be
- * assigned to a default location.
- * @return RSupportStatus_Ok on success.
- */
-RSupportStatus
-rsupport_handle_connect_create(RSupportHandle* handle, const char* pipe);
+  /**
+   * @brief Create the host (initial fifo creation).
+   *
+   * @param handle The handle to use in the creation of the host.
+   * @param pipe The pipe to use. Can be an empty string or nullptr and will be
+   * assigned to a default location.
+   * @return RSupportStatus_Ok on success.
+   */
+  RSupportStatus rsupport_handle_connect_create(RSupportHandle* handle,
+                                                const char* pipe);
 
-/**
- * @brief Disconnect from the server in a clean and orderly way.
- *
- * @param handle The handle to use while disconnecting.
- * @return RSupportStatus_Ok on success.
- */
-RSupportStatus
-rsupport_handle_disconnect(RSupportHandle* handle);
+  /**
+   * @brief Disconnect from the server in a clean and orderly way.
+   *
+   * @param handle The handle to use while disconnecting.
+   * @return RSupportStatus_Ok on success.
+   */
+  RSupportStatus rsupport_handle_disconnect(RSupportHandle* handle);
 
-/**
- * @brief Service the handle, get new updates from the host and apply activated
- * options.
- *
- * This function internally also detects the options
- * RSupportOption_AutoMovementBurst and RSupportOption_AutoFrequency and applies
- * the necessary actions, if they are active.
- *
- * @param handle The handle to service.
- * @return RSupportStatus_Ok or RSupportStatus_Updates on success.
- */
-RSupportStatus
-rsupport_handle_service(RSupportHandle* handle);
+  /**
+   * @brief Service the handle, get new updates from the host and apply
+   * activated options.
+   *
+   * This function internally also detects the options
+   * RSupportOption_AutoMovementBurst and RSupportOption_AutoFrequency and
+   * applies the necessary actions, if they are active.
+   *
+   * @param handle The handle to service.
+   * @return RSupportStatus_Ok or RSupportStatus_Updates on success.
+   */
+  RSupportStatus rsupport_handle_service(RSupportHandle* handle);
 
-/**
- * @brief Sets the specified option applying to the behaviour of the RSupport
- * library to the given value.
- *
- * These options mainly apply to the rsupport_handle_service() function, which
- * changes according to active options on the given handle. Options can also be
- * changed during run-time.
- *
- * @param handle The handle to set the option on.
- * @param option The option to set.
- * @param state The value for the option to be set to.
- * @return RSupportStatus_Ok on success.
- */
-RSupportStatus
-rsupport_handle_set_option(RSupportHandle* handle,
-                           RSupportOption option,
-                           bool state);
+  /**
+   * @brief Sets the specified option applying to the behaviour of the RSupport
+   * library to the given value.
+   *
+   * These options mainly apply to the rsupport_handle_service() function, which
+   * changes according to active options on the given handle. Options can also
+   * be changed during run-time.
+   *
+   * @param handle The handle to set the option on.
+   * @param option The option to set.
+   * @param state The value for the option to be set to.
+   * @return RSupportStatus_Ok on success.
+   */
+  RSupportStatus rsupport_handle_set_option(RSupportHandle* handle,
+                                            RSupportOption option,
+                                            bool state);
 
-/**
- * @brief Get the value of a given option in the specified handle.
- *
- * @param handle The handle to query.
- * @param option The option to check.
- * @return True if the option is active, false otherwise.
- */
-bool
-rsupport_handle_get_option(RSupportHandle* handle, RSupportOption option);
+  /**
+   * @brief Get the value of a given option in the specified handle.
+   *
+   * @param handle The handle to query.
+   * @param option The option to check.
+   * @return True if the option is active, false otherwise.
+   */
+  bool rsupport_handle_get_option(RSupportHandle* handle,
+                                  RSupportOption option);
 
-/**
- * @brief Get the time it took for the last frame to complete.
- *
- * @param handle The handle to query.
- * @return The time it took for the last frame to complete in nanoseconds.
- */
-uint32_t
-rsupport_handle_get_frame_time(RSupportHandle* handle);
+  /**
+   * @brief Get the time it took for the last frame to complete.
+   *
+   * @param handle The handle to query.
+   * @return The time it took for the last frame to complete in nanoseconds.
+   */
+  uint32_t rsupport_handle_get_frame_time(RSupportHandle* handle);
 
-// Registry Interface
-// ==================
+  // Registry Interface
+  // ==================
 
-/**
- * @brief Subscribe to a registry value.
- *
- * @param handle The handle to use.
- * @param type The type of registry variable to subscribe.
- * @param property The property to subscribe to.
- */
-void
-rsupport_handle_subscribe(RSupportHandle* handle,
-                          uint16_t type,
-                          uint16_t property);
+  /**
+   * @brief Subscribe to a registry value.
+   *
+   * @param handle The handle to use.
+   * @param type The type of registry variable to subscribe.
+   * @param property The property to subscribe to.
+   */
+  void rsupport_handle_subscribe(RSupportHandle* handle,
+                                 uint16_t type,
+                                 uint16_t property);
 
-/**
- * @brief Unsubscribe from a registry value.
- *
- * @param handle The handle to use.
- * @param type The type of registry variable to unsubscribe from.
- * @param property The property to unsubscribe from.
- */
-void
-rsupport_handle_unsubscribe(RSupportHandle* handle,
-                            uint16_t type,
-                            uint16_t property);
+  /**
+   * @brief Unsubscribe from a registry value.
+   *
+   * @param handle The handle to use.
+   * @param type The type of registry variable to unsubscribe from.
+   * @param property The property to unsubscribe from.
+   */
+  void rsupport_handle_unsubscribe(RSupportHandle* handle,
+                                   uint16_t type,
+                                   uint16_t property);
 
-/**
- * @brief Request a registry value.
- *
- * The requested variable will be in the local copy of the registry after the
- * next call to rsupport_handle_service().
- *
- * @param handle The handle to use.
- * @param type The type of registry variable to request.
- * @param property The property to request.
- */
-void
-rsupport_handle_request(RSupportHandle* handle,
-                        uint16_t type,
-                        uint16_t property);
+  /**
+   * @brief Request a registry value.
+   *
+   * The requested variable will be in the local copy of the registry after the
+   * next call to rsupport_handle_service().
+   *
+   * @param handle The handle to use.
+   * @param type The type of registry variable to request.
+   * @param property The property to request.
+   */
+  void rsupport_handle_request(RSupportHandle* handle,
+                               uint16_t type,
+                               uint16_t property);
 
-int8_t
-rsupport_handle_get_Int8(RSupportHandle* handle, uint16_t property);
-int16_t
-rsupport_handle_get_Int16(RSupportHandle* handle, uint16_t property);
-int32_t
-rsupport_handle_get_Int32(RSupportHandle* handle, uint16_t property);
-int64_t
-rsupport_handle_get_Int64(RSupportHandle* handle, uint16_t property);
-uint8_t
-rsupport_handle_get_Uint8(RSupportHandle* handle, uint16_t property);
-uint16_t
-rsupport_handle_get_Uint16(RSupportHandle* handle, uint16_t property);
-uint32_t
-rsupport_handle_get_Uint32(RSupportHandle* handle, uint16_t property);
-uint64_t
-rsupport_handle_get_Uint64(RSupportHandle* handle, uint16_t property);
-float
-rsupport_handle_get_Float(RSupportHandle* handle, uint16_t property);
-double
-rsupport_handle_get_Double(RSupportHandle* handle, uint16_t property);
-bool
-rsupport_handle_get_Bool(RSupportHandle* handle, uint16_t property);
+  int8_t rsupport_handle_get_Int8(RSupportHandle* handle, uint16_t property);
+  int16_t rsupport_handle_get_Int16(RSupportHandle* handle, uint16_t property);
+  int32_t rsupport_handle_get_Int32(RSupportHandle* handle, uint16_t property);
+  int64_t rsupport_handle_get_Int64(RSupportHandle* handle, uint16_t property);
+  uint8_t rsupport_handle_get_Uint8(RSupportHandle* handle, uint16_t property);
+  uint16_t rsupport_handle_get_Uint16(RSupportHandle* handle,
+                                      uint16_t property);
+  uint32_t rsupport_handle_get_Uint32(RSupportHandle* handle,
+                                      uint16_t property);
+  uint64_t rsupport_handle_get_Uint64(RSupportHandle* handle,
+                                      uint16_t property);
+  float rsupport_handle_get_Float(RSupportHandle* handle, uint16_t property);
+  double rsupport_handle_get_Double(RSupportHandle* handle, uint16_t property);
+  bool rsupport_handle_get_Bool(RSupportHandle* handle, uint16_t property);
 
-void
-rsupport_handle_set_Int8(RSupportHandle* handle,
-                         uint16_t property,
-                         int8_t value);
-void
-rsupport_handle_set_Int16(RSupportHandle* handle,
-                          uint16_t property,
-                          int16_t value);
-void
-rsupport_handle_set_Int32(RSupportHandle* handle,
-                          uint16_t property,
-                          int32_t value);
-void
-rsupport_handle_set_Int64(RSupportHandle* handle,
-                          uint16_t property,
-                          int64_t value);
-void
-rsupport_handle_set_Uint8(RSupportHandle* handle,
-                          uint16_t property,
-                          uint8_t value);
-void
-rsupport_handle_set_Uint16(RSupportHandle* handle,
-                           uint16_t property,
-                           uint16_t value);
-void
-rsupport_handle_set_Uint32(RSupportHandle* handle,
-                           uint16_t property,
-                           uint32_t value);
-void
-rsupport_handle_set_Uint64(RSupportHandle* handle,
-                           uint16_t property,
-                           uint64_t value);
-void
-rsupport_handle_set_Float(RSupportHandle* handle,
-                          uint16_t property,
-                          float value);
-void
-rsupport_handle_set_Double(RSupportHandle* handle,
-                           uint16_t property,
-                           double value);
-void
-rsupport_handle_set_Bool(RSupportHandle* handle, uint16_t property, bool value);
+  void rsupport_handle_set_Int8(RSupportHandle* handle,
+                                uint16_t property,
+                                int8_t value);
+  void rsupport_handle_set_Int16(RSupportHandle* handle,
+                                 uint16_t property,
+                                 int16_t value);
+  void rsupport_handle_set_Int32(RSupportHandle* handle,
+                                 uint16_t property,
+                                 int32_t value);
+  void rsupport_handle_set_Int64(RSupportHandle* handle,
+                                 uint16_t property,
+                                 int64_t value);
+  void rsupport_handle_set_Uint8(RSupportHandle* handle,
+                                 uint16_t property,
+                                 uint8_t value);
+  void rsupport_handle_set_Uint16(RSupportHandle* handle,
+                                  uint16_t property,
+                                  uint16_t value);
+  void rsupport_handle_set_Uint32(RSupportHandle* handle,
+                                  uint16_t property,
+                                  uint32_t value);
+  void rsupport_handle_set_Uint64(RSupportHandle* handle,
+                                  uint16_t property,
+                                  uint64_t value);
+  void rsupport_handle_set_Float(RSupportHandle* handle,
+                                 uint16_t property,
+                                 float value);
+  void rsupport_handle_set_Double(RSupportHandle* handle,
+                                  uint16_t property,
+                                  double value);
+  void rsupport_handle_set_Bool(RSupportHandle* handle,
+                                uint16_t property,
+                                bool value);
 
 #ifdef __cplusplus
 }
@@ -332,8 +308,7 @@ class RSupport
 
   RSupport(bool subscribedToAll = true)
     : m_handle(rsupport_handle_create(subscribedToAll), &rsupport_handle_free)
-  {
-  }
+  {}
   ~RSupport() {}
 
   /**
