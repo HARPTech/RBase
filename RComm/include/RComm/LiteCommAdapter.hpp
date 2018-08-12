@@ -103,6 +103,7 @@ class LiteCommAdapter
                 return LRT_RCORE_OK;
               }
             }
+            adapter->m_hadUpdate = true;
 
             adapter->m_acceptProperty = false;
             if(adapter->m_registry) {
@@ -149,6 +150,9 @@ class LiteCommAdapter
   {
     m_dropperPolicy = std::move(policy);
   };
+
+  bool hadUpdate() { return m_hadUpdate; }
+  void resetHadUpdate() { m_hadUpdate = false; }
 
   /**
    * @brief Sends the message over the transmission method implemented by child
@@ -377,6 +381,7 @@ class LiteCommAdapter
 
   RCore::TransmitBufferPtr m_transmit_buffer;
   Reliability m_currentReliability;
+  bool m_hadUpdate = false;
 };
 }
 }

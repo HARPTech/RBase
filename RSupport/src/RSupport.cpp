@@ -50,8 +50,8 @@ rsupport_handle_create(bool subscribedToAll)
     // Activate console only mode. This means, that changes will be printed to
     // the console and each frame reads a single line as LiteComm input from
     // cin.
-    handle->consoleAdapter = std::make_shared<lrt::rsupport::ConsoleAdapter>(
-      handle->registry, subscribedToAll);
+    handle->consoleAdapter =
+      std::make_shared<lrt::rsupport::ConsoleAdapter>(handle->registry, true);
     handle->registry->registerAdapter(handle->consoleAdapter);
   } else {
     handle->socketClientAdapter =
@@ -111,7 +111,10 @@ rsupport_handle_service(RSupportHandle* handle)
     // If the console adapter is initialised, it will be used for pacing. If the
     // PipeAdapter is used instead, a clock will be used.
     if(handle->consoleAdapter) {
-      handle->consoleAdapter->read();
+      do {
+        handle->consoleAdapter->resetHadUpdate();
+        handle->consoleAdapter->read();
+      } while(!handle->consoleAdapter->hadUpdate());
     } else {
       std::this_thread::sleep_for(waitDuration);
     }
