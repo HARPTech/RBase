@@ -34,13 +34,19 @@ ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
       typedef base64_from_binary<transform_width<const uint8_t*, 6, 8>>
         base64Iterator;
 
-      int writePaddChars = (3 - bytes % 3) % 3 + 1;
+      assert(data != NULL);
+      assert(bytes > 0);
+
+      const uint8_t* dataEnd = data + bytes;
+
+      assert(bytes <= LRT_RCOMM_BLOCKSIZE);
+      int writePaddChars = (3 - (bytes) % 3) % 3 + 1;
 
       if(adapter->m_mode & STDOUT) {
         // Output the new data to the console directly.
         cout << "!:";
         std::copy(base64Iterator(data),
-                  base64Iterator(data + bytes),
+                  base64Iterator(dataEnd),
                   std::ostreambuf_iterator<char>(cout));
 
         while(writePaddChars >= 0) {
@@ -51,10 +57,8 @@ ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
       }
       if(adapter->m_mode & CALLBACK) {
         // Output the data to all callbacks.
-        std::string outStr = "";
-        outStr.reserve(20);
-        outStr =
-          std::string(base64Iterator(data), base64Iterator(data + bytes));
+        std::string outStr =
+          std::string(base64Iterator(data), base64Iterator(dataEnd));
         outStr = "!:" + outStr;
         while(writePaddChars >= 0) {
           outStr.append("=");
@@ -133,7 +137,7 @@ ConsoleAdapter::parseBase64(std::string base64)
 
   } catch(dataflow_exception& e) {
     clog << "Invalid base64: \"" << base64 << "\"" << endl
-         << "Error: " << e.what();
+         << "Error: " << e.what() << endl;
   }
 }
 }

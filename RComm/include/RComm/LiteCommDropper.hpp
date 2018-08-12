@@ -18,7 +18,7 @@ class LiteCommDropperPolicy
   virtual bool shouldBeDropped(bool reliable,
                                uint8_t type,
                                uint16_t property,
-                               uint8_t seq_number,
+                               uint16_t seq_number,
                                int adapterId)
   {
     return false;
@@ -36,7 +36,7 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
   virtual bool shouldBeDropped(bool reliable,
                                uint8_t type,
                                uint16_t property,
-                               uint8_t seq_number,
+                               uint16_t seq_number,
                                int adapterId)
   {
     auto& entry = (*m_records)[static_cast<std::size_t>(type)]
@@ -48,9 +48,6 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
     } else if(entry.adapterId != adapterId) {
       entry.adapterId = adapterId;
       entry.sequentNumber = seq_number;
-      return false;
-    } else if(seq_number == 0b00111111) {
-      entry.sequentNumber = 0;
       return false;
     } else {
       return true;

@@ -104,6 +104,7 @@ class LiteCommAdapter
               }
             }
 
+            adapter->m_acceptProperty = false;
             if(adapter->m_registry) {
               switch(static_cast<rregistry::Type>(entry->type)) {
                 LRT_RREGISTRY_CPPTYPELIST_HELPER(
@@ -112,6 +113,7 @@ class LiteCommAdapter
                   break;
               }
             }
+            adapter->m_acceptProperty = true;
             break;
           }
           case LRT_RCP_MESSAGE_TYPE_REQUEST: {
@@ -137,10 +139,10 @@ class LiteCommAdapter
   }
   virtual ~LiteCommAdapter()
   {
-    if(m_registry)
-      m_registry->removeAdapter(this);
     m_subscriptions.reset();
     m_subscriptionsRemote.reset();
+    if(m_registry)
+      m_registry->removeAdapter(this);
   }
 
   void setDropperPolicy(LiteCommDropperPolicyPtr policy)
@@ -185,7 +187,7 @@ class LiteCommAdapter
     uint8_t type =
       static_cast<uint8_t>(rregistry::GetEnumTypeOfEntryClass(property));
 
-    if(!(*m_subscriptions)[type][static_cast<uint32_t>(property)])
+    if(!(*m_subscriptions)[type][static_cast<uint16_t>(property)])
       return;
 
     m_currentReliability = reliability;
@@ -205,9 +207,6 @@ class LiteCommAdapter
     m_currentReliability = reliability;
     lrt_rcp_message_type_t messageType;
     switch(lType) {
-      case rcomm::LiteCommType::Update:
-        messageType = LRT_RCP_MESSAGE_TYPE_UPDATE;
-        break;
       case rcomm::LiteCommType::Request:
         messageType = LRT_RCP_MESSAGE_TYPE_REQUEST;
         break;
