@@ -9,6 +9,8 @@
 #include <sys/un.h>
 #include <vector>
 
+LRT_RCOMM_PTR_DEF(rcomm, RComm)
+
 namespace lrt {
 namespace rsupport {
 class SocketClientAdapter : public rregistry::Registry::Adapter
@@ -19,6 +21,7 @@ class SocketClientAdapter : public rregistry::Registry::Adapter
   virtual ~SocketClientAdapter();
 
   virtual void send(
+
     lrt_rcore_transmit_buffer_entry_t* entry,
     rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 
@@ -29,7 +32,7 @@ class SocketClientAdapter : public rregistry::Registry::Adapter
   int getSocketFd() { return m_fd; }
 
   protected:
-  rcomm_handle_t* m_rcomm_handle;
+  RCore::RCommHandlePtr m_rcomm_handle;
   struct sockaddr_un m_addr;
   std::array<uint8_t, 100> m_buffer;
   int m_fd = 0, m_rc = 0;

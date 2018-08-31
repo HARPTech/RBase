@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 LRT_RCOMM_UNIVERSAL_DEFINITIONS();
+LRT_RCOMM_PTR(rcomm, RComm)
 
 namespace lrt {
 namespace rsupport {
@@ -13,10 +14,9 @@ SocketClientAdapter::SocketClientAdapter(
   std::shared_ptr<rregistry::Registry> registry,
   bool subscribedToAll)
   : rregistry::Registry::Adapter(registry, subscribedToAll)
+  , m_rcomm_handle(RCore::CreateRCommHandlePtr())
 {
-  m_rcomm_handle = rcomm_create();
-
-  rcomm_set_transmit_cb(m_rcomm_handle,
+  rcomm_set_transmit_cb(m_rcomm_handle.get(),
                         [](const uint8_t* data, void* userdata, size_t bytes) {
                           SocketClientAdapter* adapter =
                             static_cast<SocketClientAdapter*>(userdata);
@@ -31,27 +31,24 @@ SocketClientAdapter::SocketClientAdapter(
                         },
                         this);
   rcomm_set_accept_cb(
-    m_rcomm_handle,
+    m_rcomm_handle.get(),
     [](rcomm_block_t* block, void* userdata) {
       SocketClientAdapter* adapter =
         static_cast<SocketClientAdapter*>(userdata);
 
       rcomm_transfer_block_to_tb(
-        adapter->m_rcomm_handle, block, adapter->m_transmit_buffer.get());
+        adapter->m_rcomm_handle.get(), block, adapter->m_transmit_buffer.get());
 
       return LRT_RCORE_OK;
     },
     this);
 }
-SocketClientAdapter::~SocketClientAdapter()
-{
-  rcomm_free(m_rcomm_handle);
-}
+SocketClientAdapter::~SocketClientAdapter() {}
 void
 SocketClientAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
                           rcomm::Reliability reliability)
 {
-  rcomm_send_tb_entry(m_rcomm_handle, entry);
+  rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
 }
 
 RSupportStatus
@@ -86,7 +83,7 @@ SocketClientAdapter::service()
   m_rc = ::read(m_fd, &m_buffer, m_buffer.size());
   if(m_rc > 0) {
     // Data ready to be read by RComm.
-    rcomm_parse_bytes(m_rcomm_handle, m_buffer.data(), m_rc);
+    rcomm_parse_bytes(m_rcomm_handle.get(), m_buffer.data(), m_rc);
     return RSupportStatus_Updates;
   }
   return RSupportStatus_Ok;

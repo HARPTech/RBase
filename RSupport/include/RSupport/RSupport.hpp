@@ -74,10 +74,10 @@ extern "C"
   typedef struct RSupportHandle RSupportHandle;
 
 /**
- * @brief The default fifo path to use. Should not be overridden by clients.
+ * @brief The default socket path to use. Should not be overridden by clients.
  */
 #ifndef SWIG
-  extern const char* RSupportDefaultFifoPath;
+  extern const char* RSupportDefaultSocketPath;
 #endif
 
   /**
