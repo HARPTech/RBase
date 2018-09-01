@@ -64,9 +64,12 @@ if(INSTALL_RBASE)
 		set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 		set(CPACK_RESSOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md)
 		set(CPACK_RESSOURCE_FILE_README ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
-		set(CPACK_OUTPUT_FILE_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/packages)
+		set(CPACK_OUTPUT_FILE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/packages)
 		set(CPACK_PACKAGE_CONTACT "Max Heisinger <mail@maximaximal.com>")
-		set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3, python3-numpy, libpython3.4")
+		set(CPACK_DEBIAN_PACKAGE_DEPENDS
+				"python3, python3-numpy,
+        libpython3.4 | libpython3.5 | libpython3.6,
+        libboost-serialization1.55.0 | libboost-serialization1.58.0 | libboost-serialization1.62.0")
 		set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
 
 		include(CPack)

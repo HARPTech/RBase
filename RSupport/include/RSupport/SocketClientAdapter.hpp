@@ -9,7 +9,9 @@
 #include <sys/un.h>
 #include <vector>
 
+#ifndef SWIG
 LRT_RCOMM_PTR_DEF(rcomm, RComm)
+#endif
 
 namespace lrt {
 namespace rsupport {
