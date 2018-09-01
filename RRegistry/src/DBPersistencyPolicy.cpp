@@ -9,6 +9,10 @@
 #include <sqlite3.h>
 #include <sstream>
 
+// Link with correct target glibc.
+// https://stackoverflow.com/questions/2856438/how-can-i-link-to-a-specific-glibc-version
+__asm__(".symver realpath,realpath@GLIBC_3.4.21");
+
 struct Sqlite3StmtDeleter
 {
   int operator()(sqlite3_stmt* stmt) { return sqlite3_finalize(stmt); }

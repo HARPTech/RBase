@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Link with correct target glibc.
+// https://stackoverflow.com/questions/2856438/how-can-i-link-to-a-specific-glibc-version
+__asm__(".symver realpath,realpath@GLIBC_3.4.21");
+
 LRT_RCOMM_UNIVERSAL_DEFINITIONS();
 LRT_RCOMM_PTR(rcomm, RComm)
 
