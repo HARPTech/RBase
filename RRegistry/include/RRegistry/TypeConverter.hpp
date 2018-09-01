@@ -2,7 +2,10 @@
 #define LRT_RREGISTRY_TYPE_CONVERTER_HPP
 
 #include "Entries.hpp"
+extern "C"
+{
 #include <stdint.h>
+}
 
 #ifndef LRT_STRING_TYPE
 #include <string>
