@@ -10,7 +10,7 @@ rsupport = RS.RSupport()
 print("Created handle! Trying to connect")
 
 # Connect to default path.
-status = rsupport.connect("/tmp/lrt_pipe_path.pipe")
+status = rsupport.connect("")
 if status != RS.RSupportStatus_Ok:
     print("Error while connecting: " + RS.rsupport_status_msg(status))
 
