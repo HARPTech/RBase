@@ -91,6 +91,12 @@ class LiteCommAdapter
       [](lrt_rcore_transmit_buffer_entry_t* entry, void* userdata) {
         LiteCommAdapter<RegistryClass>* adapter =
           static_cast<LiteCommAdapter<RegistryClass>*>(userdata);
+
+        // Call message callbacks.
+        adapter->callMessageCallback(entry->message_type,
+                                     static_cast<rregistry::Type>(entry->type),
+                                     entry->property);
+
         switch(entry->message_type) {
           case LRT_RCP_MESSAGE_TYPE_UPDATE: {
             if(adapter->m_dropperPolicy) {
