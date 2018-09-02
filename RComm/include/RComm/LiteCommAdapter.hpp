@@ -93,11 +93,6 @@ class LiteCommAdapter
         LiteCommAdapter<RegistryClass>* adapter =
           static_cast<LiteCommAdapter<RegistryClass>*>(userdata);
 
-        // Call message callbacks.
-        adapter->callMessageCallback(entry->message_type,
-                                     static_cast<rregistry::Type>(entry->type),
-                                     entry->property);
-
         switch(entry->message_type) {
           case LRT_RCP_MESSAGE_TYPE_UPDATE: {
             if(adapter->m_dropperPolicy) {
@@ -141,6 +136,11 @@ class LiteCommAdapter
             break;
           }
         }
+
+        // Call message callbacks.
+        adapter->callMessageCallback(entry->message_type,
+                                     static_cast<rregistry::Type>(entry->type),
+                                     entry->property);
         return LRT_RCORE_OK;
       },
       (void*)this);
