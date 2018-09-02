@@ -70,14 +70,16 @@ SocketClientAdapter::connect(const std::string& socket)
   // Open the socket.
   if((m_fd = ::socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
     m_fd = 0;
-    cout << "[RSupport] Opening the socket failed! Error: " << strerror(errno) << endl;
-    return RSupportStatus_ConnectionFailed;
+    cout << "[RSupport] Opening the socket failed! Error: " << strerror(errno)
+         << endl;
+    return RSupportStatus_CouldNotOpenSocket;
   }
 
   // Connect to the socket.
   if(::connect(m_fd, (struct sockaddr*)&m_addr, sizeof(m_addr)) == -1) {
     m_fd = 0;
-    cout << "[RSupport] Socket connection failed! Error: " << strerror(errno) << endl;
+    cout << "[RSupport] Socket connection failed! Error: " << strerror(errno)
+         << endl;
     return RSupportStatus_ConnectionFailed;
   }
 
@@ -103,6 +105,18 @@ SocketClientAdapter::service()
     // Data ready to be read by RComm.
     rcomm_parse_bytes(m_rcomm_handle.get(), m_buffer.data(), m_rc);
     return RSupportStatus_Updates;
+  }
+  if(m_rc == -1) {
+    switch(errno) {
+      case EAGAIN:
+        return RSupportStatus_Ok;
+      case EIO:
+        return RSupportStatus_IOError;
+      case EBADF:
+        return RSupportStatus_SocketNotOpenForReading;
+      default:
+        return RSupportStatus_OtherError;
+    }
   }
   return RSupportStatus_Ok;
 }

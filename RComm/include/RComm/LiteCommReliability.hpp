@@ -14,8 +14,7 @@ operator|(Reliability a, Reliability b)
 {
   return static_cast<Reliability>(static_cast<int>(a) | static_cast<int>(b));
 }
-const Reliability DefaultReliability =
-  Reliability::Ordered | Reliability::Acknowledged;
+const Reliability DefaultReliability = Reliability::BasicDelivery;
 
 inline bool
 reliability_contains(Reliability hay, Reliability needle)

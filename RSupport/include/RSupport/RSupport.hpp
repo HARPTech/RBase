@@ -12,14 +12,14 @@
 
 typedef enum RSupportStatus
 {
-  RSupportStatus_Ok,
-  RSupportStatus_CouldNotOpenFIFOs,
+  RSupportStatus_CouldNotOpenSocket,
   RSupportStatus_ConnectionFailed,
-  RSupportStatus_Updates,
   RSupportStatus_IOError,
-  RSupportStatus_FIFONotOpenForReading,
+  RSupportStatus_SocketNotOpenForReading,
   RSupportStatus_OtherError,
   RSupportStatus_InvalidOption,
+  RSupportStatus_Ok,
+  RSupportStatus_Updates,
   RSupportStatus__Count
 } RSupportStatus;
 
@@ -282,6 +282,11 @@ extern "C"
   void rsupport_handle_set_Bool(RSupportHandle* handle,
                                 uint16_t property,
                                 bool value);
+
+  inline bool rsupport_is_error(RSupportStatus status)
+  {
+    return status < RSupportStatus_Ok;
+  }
 
 #ifdef __cplusplus
 }

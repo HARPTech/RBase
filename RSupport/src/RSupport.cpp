@@ -1,5 +1,6 @@
 #include <RRegistry/Detail.hpp>
 #include <RRegistry/TypeConverter.hpp>
+#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -8,15 +9,18 @@
 #include "../include/RSupport/SocketClientAdapter.hpp"
 #include <RRegistry/Entries.hpp>
 
+using std::cout;
+using std::endl;
+
 const char* RSupportStatusNames[RSupportStatus__Count] = {
-  "Okay",
-  "Could not open FIFOs",
+  "Could not open Socket",
   "Connection Failed",
-  "Updates Received",
   "IO-Error",
-  "FIFO not open for reading",
+  "Socket not open for reading",
   "Other Error",
   "Invalid Option"
+  "Okay",
+  "Updates Received",
 };
 const char* RSupportOptionNames[RSupportOption__Count] = {
   "Automatic Frequency Adjustment"
@@ -63,6 +67,9 @@ rsupport_handle_create(bool subscribedToAll)
   // Set default options.
   rsupport_handle_set_option(handle, RSupportOption_AutoFrequency, true);
   rsupport_handle_set_option(handle, RSupportOption_AutoMovementBurst, true);
+
+  // Default time.
+  handle->frameStart = std::chrono::system_clock::now();
 
   return handle;
 }
@@ -128,6 +135,10 @@ rsupport_handle_service(RSupportHandle* handle)
   // Service at the end to get the newest updates.
   if(handle->socketClientAdapter)
     status = handle->socketClientAdapter->service();
+
+  if(rsupport_is_error(status)) {
+    cout << "[RSupport] Error: " << rsupport_status_msg(status) << endl;
+  }
 
   return status;
 }
