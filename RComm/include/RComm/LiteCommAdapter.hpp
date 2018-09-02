@@ -144,6 +144,10 @@ class LiteCommAdapter
         return LRT_RCORE_OK;
       },
       (void*)this);
+
+    for(size_t i = 0; i < LRT_RCP_MESSAGE_TYPE_COUNT; ++i) {
+      m_messageCallback[i] = nullptr;
+    }
   }
   virtual ~LiteCommAdapter()
   {
@@ -319,19 +323,20 @@ class LiteCommAdapter
 
   void setMessageCallback(lrt_rcp_message_type_t type, MsgCallback cb)
   {
-    m_messageCallback[static_cast<size_t>(type)] = cb;
+    m_messageCallback[lrt_rcp_message_type_to_num(type)] = cb;
   }
   inline void callMessageCallback(lrt_rcp_message_type_t lType,
                                   rregistry::Type type,
                                   uint16_t property)
   {
-    auto cb = m_messageCallback[static_cast<size_t>(lType)];
-    if(cb)
+    auto cb = m_messageCallback[lrt_rcp_message_type_to_num(lType)];
+    if(cb) {
       cb(m_adapterName,
          lType,
          type,
          property,
          m_registry ? m_registry.get() : nullptr);
+    }
   }
 
   void setAdapterName(const char* name) { m_adapterName = name; }
