@@ -46,7 +46,8 @@ class LiteCommAdapter
   using MsgCallback = void (*)(const char*,
                                lrt_rcp_message_type_t lType,
                                rregistry::Type,
-                               uint16_t property);
+                               uint16_t property,
+                               RegistryClass* registry);
 
 #define LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_UPDATE_CASE(CLASS)               \
   case rregistry::Type::CLASS:                                                 \
@@ -326,7 +327,11 @@ class LiteCommAdapter
   {
     auto cb = m_messageCallback[static_cast<size_t>(lType)];
     if(cb)
-      cb(m_adapterName, lType, type, property);
+      cb(m_adapterName,
+         lType,
+         type,
+         property,
+         m_registry ? m_registry.get() : nullptr);
   }
 
   void setAdapterName(const char* name) { m_adapterName = name; }
