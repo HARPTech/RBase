@@ -25,45 +25,46 @@ namespace lrt {
 namespace rregistry {
 
 inline int
-setNthParamFromLData(sqlite3_stmt* StmtPtr,
-                     int n,
-                     Type type,
-                     const rcomm::LiteCommData& lData)
+setNthParamFromRegistry(sqlite3_stmt* StmtPtr,
+                        int n,
+                        Type type,
+                        uint16_t property,
+                        Registry& registry)
 {
   switch(type) {
     case Type::Int8:
-      return sqlite3_bind_int(StmtPtr, n, lData.Int8);
-      break;
+      return sqlite3_bind_int(
+        StmtPtr, n, registry.get(static_cast<Int8>(property)));
     case Type::Int16:
-      return sqlite3_bind_int(StmtPtr, n, lData.Int16);
-      break;
+      return sqlite3_bind_int(
+        StmtPtr, n, registry.get(static_cast<Int16>(property)));
     case Type::Int32:
-      return sqlite3_bind_int(StmtPtr, n, lData.Int32);
-      break;
+      return sqlite3_bind_int(
+        StmtPtr, n, registry.get(static_cast<Int32>(property)));
     case Type::Int64:
-      return sqlite3_bind_int64(StmtPtr, n, lData.Int64);
-      break;
+      return sqlite3_bind_int64(
+        StmtPtr, n, registry.get(static_cast<Int64>(property)));
     case Type::Uint8:
-      return sqlite3_bind_int(StmtPtr, n, lData.Uint8);
-      break;
+      return sqlite3_bind_int(
+        StmtPtr, n, registry.get(static_cast<Uint8>(property)));
     case Type::Uint16:
-      return sqlite3_bind_int(StmtPtr, n, lData.Uint16);
-      break;
+      return sqlite3_bind_int(
+        StmtPtr, n, registry.get(static_cast<Uint16>(property)));
     case Type::Uint32:
-      return sqlite3_bind_int64(StmtPtr, n, lData.Uint32);
-      break;
+      return sqlite3_bind_int64(
+        StmtPtr, n, registry.get(static_cast<Uint32>(property)));
     case Type::Uint64:
-      return sqlite3_bind_int64(StmtPtr, n, lData.Uint64);
-      break;
+      return sqlite3_bind_int64(
+        StmtPtr, n, registry.get(static_cast<Uint64>(property)));
     case Type::Float:
-      return sqlite3_bind_double(StmtPtr, n, lData.Float);
-      break;
+      return sqlite3_bind_double(
+        StmtPtr, n, registry.get(static_cast<Float>(property)));
     case Type::Double:
-      return sqlite3_bind_double(StmtPtr, n, lData.Double);
-      break;
+      return sqlite3_bind_double(
+        StmtPtr, n, registry.get(static_cast<Double>(property)));
     case Type::Bool:
-      return sqlite3_bind_int(StmtPtr, n, lData.Bool);
-      break;
+      return sqlite3_bind_int(
+        StmtPtr, n, registry.get(static_cast<Bool>(property)));
     case Type::String:
       break;
     default:
@@ -72,9 +73,47 @@ setNthParamFromLData(sqlite3_stmt* StmtPtr,
   return SQLITE_OK;
 }
 
-DBPersistencyPolicy::DBPersistencyPolicy(int trigger)
+inline int
+setNthParamFromRecord(sqlite3_stmt* StmtPtr,
+                      int n,
+                      const DBPersistencyPolicy::Record& record)
+{
+  switch(record.registryType) {
+    case Type::Int8:
+      return sqlite3_bind_int(StmtPtr, n, record.data_Int8);
+    case Type::Int16:
+      return sqlite3_bind_int(StmtPtr, n, record.data_Int16);
+    case Type::Int32:
+      return sqlite3_bind_int(StmtPtr, n, record.data_Int32);
+    case Type::Int64:
+      return sqlite3_bind_int64(StmtPtr, n, record.data_Int64);
+    case Type::Uint8:
+      return sqlite3_bind_int(StmtPtr, n, record.data_Uint8);
+    case Type::Uint16:
+      return sqlite3_bind_int(StmtPtr, n, record.data_Uint16);
+    case Type::Uint32:
+      return sqlite3_bind_int64(StmtPtr, n, record.data_Uint32);
+    case Type::Uint64:
+      return sqlite3_bind_int64(StmtPtr, n, record.data_Uint64);
+    case Type::Float:
+      return sqlite3_bind_double(StmtPtr, n, record.data_Float);
+    case Type::Double:
+      return sqlite3_bind_double(StmtPtr, n, record.data_Double);
+    case Type::Bool:
+      return sqlite3_bind_int(StmtPtr, n, record.data_Bool);
+    case Type::String:
+      break;
+    default:
+      break;
+  }
+  return SQLITE_OK;
+}
+
+DBPersistencyPolicy::DBPersistencyPolicy(std::shared_ptr<Registry> registry,
+                                         int trigger)
   : m_trigger(trigger)
   , m_db(nullptr, sqlite3_close)
+  , m_registry(registry)
 {
   m_stmtInsertSet.resize(static_cast<size_t>(rregistry::Type::_COUNT));
   m_controlStatements.resize(2);
@@ -139,8 +178,7 @@ DBPersistencyPolicy::disable()
 void
 DBPersistencyPolicy::push(uint16_t clientId,
                           rregistry::Type type,
-                          uint16_t property,
-                          rcomm::LiteCommData data)
+                          uint16_t property)
 {
   if(m_stop)
     return;
@@ -149,7 +187,6 @@ DBPersistencyPolicy::push(uint16_t clientId,
   record.clientId = clientId;
   record.registryType = type;
   record.property = property;
-  record.data = data;
 
   std::lock_guard<std::mutex> lock(m_queueMutex);
   m_recordsQueue.push(record);
@@ -304,7 +341,7 @@ DBPersistencyPolicy::insertRecord(const Record& record)
     std::chrono::duration_cast<std::chrono::nanoseconds>(record.timeSinceStart)
       .count());
 
-  setNthParamFromLData(StmtPtr, 4, record.registryType, record.data);
+  setNthParamFromRecord(StmtPtr, 4, record);
 
   sqlite3_step(StmtPtr);
   sqlite3_reset(StmtPtr);

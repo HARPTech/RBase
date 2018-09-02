@@ -22,30 +22,46 @@ template<typename TypeCategory>
 constexpr Type
 GetEnumTypeOfEntryClass(TypeCategory enumType);
 
-#define LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(CLASS, TYPE) \
-  template<>                                             \
-  struct GetValueTypeOfEntryClass<CLASS>                 \
-  {                                                      \
-    typedef TYPE type;                                   \
-  };                                                     \
-  template<>                                             \
-  constexpr Type GetEnumTypeOfEntryClass(CLASS)          \
-  {                                                      \
-    return Type::CLASS;                                  \
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Int8 int8_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Int16 int16_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Int32 int32_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Int64 int64_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Uint8 uint8_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Uint16 uint16_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Uint32 uint32_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Uint64 uint64_t
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Bool bool
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Float float
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_Double double
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_String LRT_STRING_TYPE
+
+#define LRT_RREGISTRY_TYPE_CONVERTER_NATIVE(CLASS) \
+  LRT_RREGISTRY_TYPE_CONVERTER_NATIVE_##CLASS
+
+#define LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(CLASS)     \
+  template<>                                                 \
+  struct GetValueTypeOfEntryClass<CLASS>                     \
+  {                                                          \
+    typedef LRT_RREGISTRY_TYPE_CONVERTER_NATIVE(CLASS) type; \
+  };                                                         \
+  template<>                                                 \
+  constexpr Type GetEnumTypeOfEntryClass(CLASS)              \
+  {                                                          \
+    return Type::CLASS;                                      \
   }
 
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int8, int8_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int16, int16_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int32, int32_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int64, int64_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint8, uint8_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint16, uint16_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint32, uint32_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint64, uint64_t)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Float, float)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Double, double)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Bool, bool)
-LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String, LRT_STRING_TYPE)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int8)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int16)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int32)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Int64)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint8)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint16)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint32)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Uint64)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Float)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Double)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(Bool)
+LRT_RREGISTRY_TYPE_CONVERTER_STRUCT(String)
 
 #define LRT_RREGISTRY_TYPETOTEMPLATEFUNCHELPER_CASE(                           \
   CLASS, TYPE_VAR, PROPERTY_VAR, TEMPLATE_FUNC, USERDATA)                      \

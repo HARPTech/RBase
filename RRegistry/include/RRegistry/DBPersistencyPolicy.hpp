@@ -10,6 +10,10 @@
 #include <string>
 #include <thread>
 
+#include "Entries.hpp"
+#include "Registry.hpp"
+#include "TypeConverter.hpp"
+
 struct sqlite3;
 struct sqlite3_stmt;
 struct Sqlite3StmtDeleter;
@@ -23,10 +27,10 @@ namespace rregistry {
 /**
  * @brief Implements persistent saving of registry data into a SQLite database.
  *
- * Per default, all database files are captured in ~/public_html with the current
- * time as filename. Capturing can be activated by enable() and disable() and is
- * integrated into the LiteCommAdapter to be activated when Bool::PERS_ENABLE is
- * activated.
+ * Per default, all database files are captured in ~/public_html with the
+ * current time as filename. Capturing can be activated by enable() and
+ * disable() and is integrated into the LiteCommAdapter to be activated when
+ * Bool::PERS_ENABLE is activated.
  *
  * The database can later be queried with commands like this (in SQL):
  *  SELECT general.key,setsInt16.timestamp,setsInt16.value FROM setsInt16
@@ -36,7 +40,7 @@ namespace rregistry {
 class DBPersistencyPolicy : public PersistencyPolicy
 {
   public:
-  DBPersistencyPolicy(int trigger = 50);
+  DBPersistencyPolicy(std::shared_ptr<Registry> registry, int trigger = 50);
   virtual ~DBPersistencyPolicy();
 
   void start(std::string dbFile = "");
@@ -44,24 +48,56 @@ class DBPersistencyPolicy : public PersistencyPolicy
 
   virtual void push(uint16_t clientId,
                     rregistry::Type type,
-                    uint16_t property,
-                    rcomm::LiteCommData data) override;
-
+                    uint16_t property) override;
   virtual void enable(const std::string& dbFile = "") override;
   virtual void disable() override;
 
-  private:
+#define LRT_RREGISTRY_DBPERSISTENCYPOLICY_RECORD_UNION(CLASS) \
+  LRT_RREGISTRY_TYPE_CONVERTER_NATIVE(CLASS) data_##CLASS;
+#define LRT_RREGISTRY_DBPERSISTENCYPOLICY_RECORD_SWITCH(CLASS) \
+  case Type::CLASS:                                            \
+    data_##CLASS = record.data_##CLASS;                        \
+    break;
+
   using Clock = std::chrono::high_resolution_clock;
-  using Sqlite3Ptr = std::unique_ptr<::sqlite3, int (*)(::sqlite3*)>;
-  using Sqlite3StmtPtr = std::unique_ptr<::sqlite3_stmt, ::Sqlite3StmtDeleter>;
   struct Record
   {
+    Record()
+    {
+      clientId = 0;
+      registryType = rregistry::Type::Int8;
+      property = 0;
+      data_Uint64 = 0;
+    }
+    Record(const Record& record)
+    {
+      timeSinceStart = record.timeSinceStart;
+      clientId = record.clientId;
+      property = record.property;
+      registryType = record.registryType;
+      switch(registryType) {
+        LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+          LRT_RREGISTRY_DBPERSISTENCYPOLICY_RECORD_SWITCH)
+        default:
+          break;
+      }
+    }
+    ~Record() {}
+
     Clock::duration timeSinceStart;
     uint16_t clientId;
     rregistry::Type registryType;
     uint16_t property;
-    rcomm::LiteCommData data;
+    union
+    {
+      LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+        LRT_RREGISTRY_DBPERSISTENCYPOLICY_RECORD_UNION)
+    };
   };
+
+  private:
+  using Sqlite3Ptr = std::unique_ptr<::sqlite3, int (*)(::sqlite3*)>;
+  using Sqlite3StmtPtr = std::unique_ptr<::sqlite3_stmt, ::Sqlite3StmtDeleter>;
 
   void run();
   void insertRecord(const Record& record);
@@ -86,6 +122,7 @@ class DBPersistencyPolicy : public PersistencyPolicy
 
   std::vector<Sqlite3StmtPtr> m_stmtInsertSet;
   std::vector<Sqlite3StmtPtr> m_controlStatements;
+  std::shared_ptr<Registry> m_registry;
 
   std::thread m_workerThread;
 

@@ -44,7 +44,7 @@ class LiteCommAdapter
   };
 
   using MsgCallback = void (*)(const char*,
-                               LiteCommType lType,
+                               lrt_rcp_message_type_t lType,
                                rregistry::Type,
                                uint16_t property);
 
@@ -205,25 +205,10 @@ class LiteCommAdapter
 
   template<typename TypeCategory>
   void sendRequestSubscribeUpdate(TypeCategory property,
-                                  rcomm::LiteCommType lType,
+                                  lrt_rcp_message_type_t messageType,
                                   Reliability reliability = DefaultReliability)
   {
     m_currentReliability = reliability;
-    lrt_rcp_message_type_t messageType;
-    switch(lType) {
-      case rcomm::LiteCommType::Request:
-        messageType = LRT_RCP_MESSAGE_TYPE_REQUEST;
-        break;
-      case rcomm::LiteCommType::Subscribe:
-        messageType = LRT_RCP_MESSAGE_TYPE_SUBSCRIBE;
-        break;
-      case rcomm::LiteCommType::Unsubscribe:
-        messageType = LRT_RCP_MESSAGE_TYPE_UNSUBSCRIBE;
-        break;
-      default:
-        messageType = LRT_RCP_MESSAGE_TYPE_REQUEST;
-        break;
-    }
     lrt_rcore_transmit_buffer_send_ctrl(
       m_transmit_buffer.get(),
       static_cast<uint8_t>(rregistry::GetEnumTypeOfEntryClass(property)),
@@ -237,14 +222,14 @@ class LiteCommAdapter
                       Reliability reliability = DefaultReliability)
   {
     sendRequestSubscribeUpdate(
-      property, rcomm::LiteCommType::Request, reliability);
+      property, LRT_RCP_MESSAGE_TYPE_REQUEST, reliability);
   }
   template<typename TypeCategory>
   inline void subscribe(TypeCategory property,
                         Reliability reliability = DefaultReliability)
   {
     sendRequestSubscribeUpdate(
-      property, rcomm::LiteCommType::Subscribe, reliability);
+      property, LRT_RCP_MESSAGE_TYPE_SUBSCRIBE, reliability);
     (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                             [static_cast<std::size_t>(property)] = true;
@@ -254,7 +239,7 @@ class LiteCommAdapter
                           Reliability reliability = DefaultReliability)
   {
     sendRequestSubscribeUpdate(
-      property, rcomm::LiteCommType::Unsubscribe, reliability);
+      property, LRT_RCP_MESSAGE_TYPE_UNSUBSCRIBE, reliability);
     (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                             [static_cast<std::size_t>(property)] = false;
@@ -325,11 +310,11 @@ class LiteCommAdapter
                                    [static_cast<uint32_t>(property)];
   }
 
-  void setMessageCallback(LiteCommType type, MsgCallback cb)
+  void setMessageCallback(lrt_rcp_message_type_t type, MsgCallback cb)
   {
     m_messageCallback[static_cast<size_t>(type)] = cb;
   }
-  inline void callMessageCallback(LiteCommType lType,
+  inline void callMessageCallback(lrt_rcp_message_type_t lType,
                                   rregistry::Type type,
                                   uint16_t property)
   {
@@ -371,11 +356,9 @@ class LiteCommAdapter
   std::unique_ptr<rregistry::SubscriptionMap<bool>> m_subscriptionsRemote;
 
   int m_adapterId = 0;
-  const rcomm::LiteCommDict* m_dictionary = nullptr;
 
-  MsgCallback m_messageCallback[static_cast<size_t>(LiteCommType::_COUNT)] = {
-    nullptr
-  };
+  MsgCallback m_messageCallback[static_cast<size_t>(
+    LRT_RCP_MESSAGE_TYPE_COUNT)] = { nullptr };
 
   LiteCommDropperPolicyPtr m_dropperPolicy;
 

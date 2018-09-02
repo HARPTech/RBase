@@ -15,12 +15,8 @@ class PersistencyPolicy
   PersistencyPolicy() {}
   virtual ~PersistencyPolicy() {}
 
-  virtual void push(uint16_t clientId,
-                    rregistry::Type type,
-                    uint16_t property,
-                    rcomm::LiteCommData data)
-  {
-  }
+  virtual void push(uint16_t clientId, rregistry::Type type, uint16_t property)
+  {}
 
   virtual void enable(const std::string& dbFile = "") {}
   virtual void disable() {}
