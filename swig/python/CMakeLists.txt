@@ -38,4 +38,11 @@ if(INSTALL_RBASE)
 				${CMAKE_CURRENT_BINARY_DIR}/_RSupport.so
 				DESTINATION share/python3
 				)
+		install(FILES
+				${CMAKE_CURRENT_BINARY_DIR}/RRegistry.py
+				${CMAKE_CURRENT_BINARY_DIR}/_RRegistry.so
+				${CMAKE_CURRENT_BINARY_DIR}/RSupport.py
+				${CMAKE_CURRENT_BINARY_DIR}/_RSupport.so
+				DESTINATION lib/python3/dist-packages
+				)
 endif()

@@ -1,6 +1,7 @@
 #include "../include/RSupport/SocketClientAdapter.hpp"
 #include <RCore/rcomm.h>
 #include <fcntl.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,6 +12,9 @@ __asm__(".symver realpath,realpath@GLIBC_3.4.21");
 
 LRT_RCOMM_UNIVERSAL_DEFINITIONS();
 LRT_RCOMM_PTR(rcomm, RComm)
+
+using std::cout;
+using std::endl;
 
 namespace lrt {
 namespace rsupport {
@@ -58,12 +62,22 @@ SocketClientAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
 RSupportStatus
 SocketClientAdapter::connect(const std::string& socket)
 {
+  cout << "[RSupport] Connecting to socket " << socket << endl;
   memset(&m_addr, 0, sizeof(m_addr));
   m_addr.sun_family = AF_UNIX;
   strncpy(m_addr.sun_path, socket.c_str(), sizeof(m_addr.sun_path));
 
+  // Open the socket.
+  if((m_fd = ::socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+    m_fd = 0;
+    cout << "[RSupport] Opening the socket failed! Error: " << strerror(errno) << endl;
+    return RSupportStatus_ConnectionFailed;
+  }
+
   // Connect to the socket.
   if(::connect(m_fd, (struct sockaddr*)&m_addr, sizeof(m_addr)) == -1) {
+    m_fd = 0;
+    cout << "[RSupport] Socket connection failed! Error: " << strerror(errno) << endl;
     return RSupportStatus_ConnectionFailed;
   }
 
