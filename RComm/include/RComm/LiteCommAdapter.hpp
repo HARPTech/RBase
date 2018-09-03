@@ -49,6 +49,14 @@ class LiteCommAdapter
                                uint16_t property,
                                RegistryClass* registry);
 
+#define LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_BOUNDS_CHECK_CASE(CLASS) \
+  case rregistry::Type::CLASS:                                         \
+    if(static_cast<rregistry::CLASS>(entry->property) >=               \
+       rregistry::CLASS::_COUNT) {                                     \
+      return LRT_RCORE_OK;                                             \
+    }                                                                  \
+    break;
+
 #define LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_UPDATE_CASE(CLASS)               \
   case rregistry::Type::CLASS:                                                 \
     adapter->m_registry->set(                                                  \
@@ -57,6 +65,7 @@ class LiteCommAdapter
         (const uint8_t*)entry->data->s,                                        \
         sizeof(rregistry::GetValueTypeOfEntryClass<rregistry::CLASS>::type))); \
     break;
+
 #define LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_REQUEST_CASE(CLASS) \
   case rregistry::Type::CLASS:                                    \
     adapter->m_registry->setBack(                                 \
@@ -92,6 +101,13 @@ class LiteCommAdapter
       [](lrt_rcore_transmit_buffer_entry_t* entry, void* userdata) {
         LiteCommAdapter<RegistryClass>* adapter =
           static_cast<LiteCommAdapter<RegistryClass>*>(userdata);
+
+        switch(static_cast<rregistry::Type>(entry->type)) {
+          LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
+            LRT_RCOMM_LITECOMMADAPTER_TB_FINISHED_BOUNDS_CHECK_CASE)
+          default:
+            return LRT_RCORE_OK;
+        }
 
         switch(entry->message_type) {
           case LRT_RCP_MESSAGE_TYPE_UPDATE: {
