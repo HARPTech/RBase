@@ -72,6 +72,12 @@ class Registry
                   ValueType value,
                   rcomm::Reliability reliability = rcomm::DefaultReliability)
   {
+    // Check if the new value is different than the old one and discard the new
+    // value if it has not changed.
+    if(get(property) == value) {
+      return;
+    }
+
     setToArray(property, value);
     for(auto it = m_adapters.begin(); it != m_adapters.end();) {
       if(auto lock = it->lock()) {
