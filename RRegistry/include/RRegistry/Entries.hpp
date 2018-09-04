@@ -124,6 +124,8 @@ enum class Bool
   PERS_ENABLE = 5,
   PERS_ACTIVE = 6,
 
+  CTRL_RESET_SEQ_NUMBERS = 7,
+
   _COUNT
 };
 enum class String

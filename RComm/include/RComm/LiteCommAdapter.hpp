@@ -157,6 +157,13 @@ class LiteCommAdapter
         adapter->callMessageCallback(entry->message_type,
                                      static_cast<rregistry::Type>(entry->type),
                                      entry->property);
+        // Set to persistency policy.
+        if(adapter->m_registry->m_persistencyPolicy) {
+          adapter->m_registry->m_persistencyPolicy->push(
+            adapter->m_adapterId,
+            static_cast<rregistry::Type>(entry->type),
+            entry->property);
+        }
         return LRT_RCORE_OK;
       },
       (void*)this);

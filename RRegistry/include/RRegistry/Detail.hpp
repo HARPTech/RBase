@@ -495,6 +495,13 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Bool) = {
     false,
     false,
     true },
+  { "CTRL_RESET_SEQ_NUMBERS",
+    "Reset sequence numbers on all clients and hosts, so that messages can be "
+    "received again.",
+    "",
+    false,
+    false,
+    true },
 };
 static constexpr EntryDetailLite
   StringDetail[static_cast<size_t>(String::_COUNT)] = {

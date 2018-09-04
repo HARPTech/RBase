@@ -175,6 +175,12 @@ DBPersistencyPolicy::disable()
   if(m_running)
     stop();
 }
+
+#define PUSH_CASE(CLASS)                                                 \
+  case Type::CLASS:                                                      \
+    record.data_##CLASS = m_registry->get(static_cast<CLASS>(property)); \
+    break;
+
 void
 DBPersistencyPolicy::push(uint16_t clientId,
                           rregistry::Type type,
@@ -187,6 +193,13 @@ DBPersistencyPolicy::push(uint16_t clientId,
   record.clientId = clientId;
   record.registryType = type;
   record.property = property;
+
+  switch(type) {
+    LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(PUSH_CASE)
+    default:
+      record.data_Int64 = 0;
+      break;
+  }
 
   std::lock_guard<std::mutex> lock(m_queueMutex);
   m_recordsQueue.push(record);

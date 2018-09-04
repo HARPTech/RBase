@@ -42,6 +42,18 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
     auto& entry = (*m_records)[static_cast<std::size_t>(type)]
                               [static_cast<std::size_t>(property)];
 
+    if(type == static_cast<uint8_t>(rregistry::Type::Bool) &&
+       property ==
+         static_cast<uint16_t>(rregistry::Bool::CTRL_RESET_SEQ_NUMBERS)) {
+      for(auto& records : *m_records) {
+        for(auto& record : records) {
+          record.sequentNumber = 0;
+          record.adapterId = 0;
+        }
+      }
+      return true;
+    }
+
     if(seq_number >= entry.sequentNumber) {
       entry.sequentNumber = seq_number;
       return false;
