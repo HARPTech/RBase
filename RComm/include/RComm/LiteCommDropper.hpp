@@ -57,6 +57,9 @@ class LiteCommDropperLossyPolicy : public LiteCommDropperPolicy
     if(seq_number >= entry.sequentNumber) {
       entry.sequentNumber = seq_number;
       return false;
+    } else if(abs(seq_number - entry.sequentNumber) > 500) {
+      entry.sequentNumber = 0;
+      return false;
     } else if(entry.adapterId != adapterId) {
       entry.adapterId = adapterId;
       entry.sequentNumber = seq_number;
