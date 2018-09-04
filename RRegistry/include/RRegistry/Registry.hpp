@@ -166,6 +166,19 @@ class Registry
     m_persistencyPolicy = std::move(persistencyPolicy);
   }
 
+  void enablePersistencyPolicy(const std::string& dbFile = "")
+  {
+    if(m_persistencyPolicy) {
+      m_persistencyPolicy->enable(dbFile);
+    }
+  }
+  void disablePersistencyPolicy()
+  {
+    if(m_persistencyPolicy) {
+      m_persistencyPolicy->disable();
+    }
+  }
+
 // The following declaration is not supported by swig and therefore it is
 // commented out in the swig source generation. It is not important though,
 // because the external API does not need this bit.
