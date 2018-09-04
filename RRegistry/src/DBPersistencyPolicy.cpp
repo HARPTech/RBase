@@ -141,7 +141,7 @@ DBPersistencyPolicy::start(std::string dbFile)
       buffer, sizeof(buffer), "RegistryDump_%Y-%m-%d_%H-%M-%S.db", timeinfo);
     std::string homedir = getenv("HOME");
 
-    dbFile = homedir + "/public_html/" + std::string(buffer);
+    dbFile = homedir + "/VERNER-Captures/" + std::string(buffer);
   }
   m_dbFile = dbFile;
 
