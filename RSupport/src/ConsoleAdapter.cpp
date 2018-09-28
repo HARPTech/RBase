@@ -16,18 +16,15 @@ using std::clog;
 using std::cout;
 using std::endl;
 
-LRT_RCOMM_UNIVERSAL();
-
 namespace lrt {
 namespace rsupport {
 ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
                                bool subscribedToAll)
   : rregistry::Registry::Adapter(registry, subscribedToAll)
+  , m_rcomm_handle(RCore::CreateRCommHandlePtr())
 {
-  m_rcomm_handle = rcomm_create();
-
   rcomm_set_transmit_cb(
-    m_rcomm_handle,
+    m_rcomm_handle.get(),
     [](const uint8_t* data, void* userdata, size_t bytes) {
       ConsoleAdapter* adapter = static_cast<ConsoleAdapter*>(userdata);
       using namespace boost::archive::iterators;
@@ -39,7 +36,6 @@ ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
 
       const uint8_t* dataEnd = data + bytes;
 
-      assert(bytes <= LRT_RCOMM_BLOCKSIZE);
       int writePaddChars = (3 - (bytes) % 3) % 3 + 1;
 
       if(adapter->m_mode & STDOUT) {
@@ -73,27 +69,25 @@ ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
     },
     this);
   rcomm_set_accept_cb(
-    m_rcomm_handle,
-    [](rcomm_block_t* block, void* userdata) {
+    m_rcomm_handle.get(),
+    [](lrt_rbp_message_t* message, void* userdata) {
       ConsoleAdapter* adapter = static_cast<ConsoleAdapter*>(userdata);
 
-      rcomm_transfer_block_to_tb(
-        adapter->m_rcomm_handle, block, adapter->m_transmit_buffer.get());
+      rcomm_transfer_message_to_tb(adapter->m_rcomm_handle.get(),
+                                   message,
+                                   adapter->m_transmit_buffer.get());
 
       return LRT_RCORE_OK;
     },
     this);
 }
-ConsoleAdapter::~ConsoleAdapter()
-{
-  rcomm_free(m_rcomm_handle);
-}
+ConsoleAdapter::~ConsoleAdapter() {}
 
 void
 ConsoleAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
                      rcomm::Reliability reliability)
 {
-  rcomm_send_tb_entry(m_rcomm_handle, entry);
+  rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
 }
 void
 ConsoleAdapter::read()
@@ -131,7 +125,7 @@ ConsoleAdapter::parseBase64(std::string base64)
     std::string binaryStr =
       std::string(binaryIt(base64.begin()), binaryIt(base64.end()));
 
-    rcomm_parse_bytes(m_rcomm_handle,
+    rcomm_parse_bytes(m_rcomm_handle.get(),
                       reinterpret_cast<const uint8_t*>(binaryStr.data()),
                       binaryStr.length());
 

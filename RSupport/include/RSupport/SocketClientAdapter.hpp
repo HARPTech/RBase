@@ -3,15 +3,12 @@
 
 #include "RSupport.hpp"
 #include <RCore/defaults.h>
+#include <RCore/util.hpp>
 #include <RRegistry/Registry.hpp>
 #include <functional>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <vector>
-
-#ifndef SWIG
-LRT_RCOMM_PTR_DEF(rcomm, RComm)
-#endif
 
 namespace lrt {
 namespace rsupport {

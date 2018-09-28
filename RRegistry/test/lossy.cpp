@@ -1,8 +1,8 @@
 #include <catch.hpp>
 
-#define LRT_RCORE_DEBUG
 #include <RComm/LiteCommDropper.hpp>
 #include <RCore/defaults.h>
+#include <RCore/util.hpp>
 #include <RRegistry/Registry.hpp>
 #include <RRegistry/TypeConverter.hpp>
 
@@ -16,24 +16,21 @@ using namespace lrt::rregistry;
 
 const int checkValue = 100;
 
-LRT_RCOMM_UNIVERSAL()
-
 class StackAdapter : public rregistry::Registry::Adapter
 {
   public:
   struct StackEntry
   {
-    std::array<uint8_t, LRT_RCOMM_BLOCKSIZE> data;
+    std::array<uint8_t, 16> data;
     size_t bytes;
   };
 
   StackAdapter(std::shared_ptr<Registry> registry, bool subscribed = false)
     : LiteCommAdapter::LiteCommAdapter(registry, subscribed)
+    , m_rcomm_handle(RCore::CreateRCommHandlePtr())
   {
-    m_rcomm_handle = rcomm_create();
-
     rcomm_set_transmit_cb(
-      m_rcomm_handle,
+      m_rcomm_handle.get(),
       [](const uint8_t* data, void* userdata, size_t bytes) {
         StackAdapter* adapter = static_cast<StackAdapter*>(userdata);
         auto entry = std::make_unique<StackEntry>();
@@ -44,18 +41,19 @@ class StackAdapter : public rregistry::Registry::Adapter
       },
       (void*)this);
     rcomm_set_accept_cb(
-      m_rcomm_handle,
-      [](rcomm_block_t* block, void* userdata) {
+      m_rcomm_handle.get(),
+      [](lrt_rbp_message_t* message, void* userdata) {
         StackAdapter* adapter = static_cast<StackAdapter*>(userdata);
 
-        rcomm_transfer_block_to_tb(
-          adapter->m_rcomm_handle, block, adapter->m_transmit_buffer.get());
+        rcomm_transfer_message_to_tb(adapter->m_rcomm_handle.get(),
+                                     message,
+                                     adapter->m_transmit_buffer.get());
 
         return LRT_RCORE_OK;
       },
       (void*)this);
   }
-  virtual ~StackAdapter() { rcomm_free(m_rcomm_handle); }
+  virtual ~StackAdapter() {}
 
   virtual void send(lrt_rcore_transmit_buffer_entry_t* entry,
                     rcomm::Reliability = rcomm::DefaultReliability)
@@ -70,7 +68,7 @@ class StackAdapter : public rregistry::Registry::Adapter
         entry->seq_number = m_seq_num_steering++;
       }
     }
-    rcomm_send_tb_entry(m_rcomm_handle, entry);
+    rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
   }
 
   uint16_t m_seq_num_forward = 255;
@@ -84,7 +82,7 @@ class StackAdapter : public rregistry::Registry::Adapter
 
       if(m_target) {
         rcomm_parse_bytes(
-          m_target->m_rcomm_handle, entry->data.data(), entry->bytes);
+          m_target->m_rcomm_handle.get(), entry->data.data(), entry->bytes);
       }
     }
   }
@@ -94,7 +92,7 @@ class StackAdapter : public rregistry::Registry::Adapter
   private:
   StackAdapter* m_target = nullptr;
   std::stack<std::unique_ptr<StackEntry>> m_stack;
-  rcomm_handle_t* m_rcomm_handle;
+  RCore::RCommHandlePtr m_rcomm_handle;
 };
 
 void

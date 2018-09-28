@@ -69,6 +69,8 @@ build/
 
 out/
 
+logs/
+
 CMakeFiles/
 Makefile
 cmake_install.cmake

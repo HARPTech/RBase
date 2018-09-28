@@ -1,5 +1,6 @@
 #include "../include/RSupport/SocketClientAdapter.hpp"
 #include <RCore/rcomm.h>
+#include <RCore/util.hpp>
 #include <fcntl.h>
 #include <iostream>
 #include <stdio.h>
@@ -9,9 +10,6 @@
 // Link with correct target glibc.
 // https://stackoverflow.com/questions/2856438/how-can-i-link-to-a-specific-glibc-version
 __asm__(".symver realpath,realpath@GLIBC_3.4.21");
-
-LRT_RCOMM_UNIVERSAL_DEFINITIONS();
-LRT_RCOMM_PTR(rcomm, RComm)
 
 using std::cout;
 using std::endl;
@@ -40,12 +38,12 @@ SocketClientAdapter::SocketClientAdapter(
                         this);
   rcomm_set_accept_cb(
     m_rcomm_handle.get(),
-    [](rcomm_block_t* block, void* userdata) {
+    [](lrt_rbp_message_t* message, void* userdata) {
       SocketClientAdapter* adapter =
         static_cast<SocketClientAdapter*>(userdata);
 
-      rcomm_transfer_block_to_tb(
-        adapter->m_rcomm_handle.get(), block, adapter->m_transmit_buffer.get());
+      rcomm_transfer_message_to_tb(
+        adapter->m_rcomm_handle.get(), message, adapter->m_transmit_buffer.get());
 
       return LRT_RCORE_OK;
     },

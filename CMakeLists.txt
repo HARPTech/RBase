@@ -35,11 +35,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set (CMAKE_CXX_FLAGS "-std=gnu++14 ${CMAKE_CXX_FLAGS}")
 endif ()
 
-if(testing)
-		enable_testing()
-		add_subdirectory(test)
-endif()
-
 add_subdirectory(RCore)
 
 add_subdirectory(RComm)
@@ -48,6 +43,13 @@ add_subdirectory(RSupport)
 
 if(BUILD_SWIG)
 		add_subdirectory(swig)
+endif()
+
+get_directory_property(hasParent PARENT_DIRECTORY)
+if(NOT hasParent)
+    if(BUILD_TESTS)
+				add_subdirectory(RCore/test)
+    endif()
 endif()
 
 if(INSTALL_RBASE)

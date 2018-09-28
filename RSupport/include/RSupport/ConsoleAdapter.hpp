@@ -2,6 +2,7 @@
 #define LRT_RSUPPORT_CONSOLEADAPTER_HPP
 
 #include <RCore/defaults.h>
+#include <RCore/util.hpp>
 #include <RRegistry/Registry.hpp>
 #include <functional>
 #include <vector>
@@ -41,7 +42,7 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
   Mode m_mode = STDOUT;
   int m_readTimeout = 0;
 
-  rcomm_handle_t *m_rcomm_handle;
+  RCore::RCommHandlePtr m_rcomm_handle;
 };
 }
 }
