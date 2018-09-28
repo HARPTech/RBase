@@ -92,8 +92,7 @@ class LiteCommAdapter
         assert(entry != 0);
         assert(entry->data != 0);
         assert(entry->data->l >= 0);
-        adapter->send(entry, adapter->m_currentReliability);
-        return LRT_RCORE_OK;
+        return adapter->send(entry, adapter->m_currentReliability);
       },
       (void*)this);
     lrt_rcore_transmit_buffer_set_finished_cb(
@@ -196,21 +195,20 @@ class LiteCommAdapter
    * implementations have to do to be able to send messages is to implement the
    * transmission of Message structs for the length Message::length()
    */
-  virtual void send(lrt_rcore_transmit_buffer_entry_t* entry,
-                    const Reliability = DefaultReliability) = 0;
+  virtual lrt_rcore_event_t send(lrt_rcore_transmit_buffer_entry_t* entry,
+                                 const Reliability = DefaultReliability) = 0;
 
-#define LRT_RCOMM_LITECOMMADAPTER_SET_CASE(CLASS)                    \
-  case rregistry::Type::CLASS:                                       \
-    lrt_rcore_transmit_buffer_send_##CLASS(                          \
-      m_transmit_buffer.get(),                                       \
-      type,                                                          \
-      static_cast<uint16_t>(property),                               \
-      value,                                                         \
-      reliability_contains(reliability, Reliability::Acknowledged)); \
-    break;
+#define LRT_RCOMM_LITECOMMADAPTER_SET_CASE(CLASS)  \
+  case rregistry::Type::CLASS:                     \
+    return lrt_rcore_transmit_buffer_send_##CLASS( \
+      m_transmit_buffer.get(),                     \
+      type,                                        \
+      static_cast<uint16_t>(property),             \
+      value,                                       \
+      reliability_contains(reliability, Reliability::Acknowledged));
 
   template<class TypeCategory>
-  inline void set(
+  inline lrt_rcore_event_t set(
     TypeCategory property,
     typename rregistry::GetValueTypeOfEntryClass<TypeCategory>::type value,
     Reliability reliability = DefaultReliability)
@@ -219,14 +217,14 @@ class LiteCommAdapter
     using namespace rregistry;
 
     if(!m_acceptProperty)
-      return;
+      return LRT_RCORE_NOT_ACCEPTED;
 
     // Check if the property has been subscribed by the current adapter.
     uint8_t type =
       static_cast<uint8_t>(rregistry::GetEnumTypeOfEntryClass(property));
 
     if(!(*m_subscriptions)[type][static_cast<uint16_t>(property)])
-      return;
+      return LRT_RCORE_NOT_SUBSCRIBED;
 
     m_currentReliability = reliability;
 
@@ -235,15 +233,18 @@ class LiteCommAdapter
       default:
         break;
     }
+
+    return LRT_RCORE_OK;
   }
 
   template<typename TypeCategory>
-  void sendRequestSubscribeUpdate(TypeCategory property,
-                                  lrt_rcp_message_type_t messageType,
-                                  Reliability reliability = DefaultReliability)
+  lrt_rcore_event_t sendRequestSubscribeUpdate(
+    TypeCategory property,
+    lrt_rcp_message_type_t messageType,
+    Reliability reliability = DefaultReliability)
   {
     m_currentReliability = reliability;
-    lrt_rcore_transmit_buffer_send_ctrl(
+    return lrt_rcore_transmit_buffer_send_ctrl(
       m_transmit_buffer.get(),
       static_cast<uint8_t>(rregistry::GetEnumTypeOfEntryClass(property)),
       static_cast<uint16_t>(property),
@@ -252,31 +253,33 @@ class LiteCommAdapter
   }
 
   template<typename TypeCategory>
-  inline void request(TypeCategory property,
-                      Reliability reliability = DefaultReliability)
+  inline lrt_rcore_event_t request(TypeCategory property,
+                                   Reliability reliability = DefaultReliability)
   {
-    sendRequestSubscribeUpdate(
+    return sendRequestSubscribeUpdate(
       property, LRT_RCP_MESSAGE_TYPE_REQUEST, reliability);
   }
   template<typename TypeCategory>
-  inline void subscribe(TypeCategory property,
-                        Reliability reliability = DefaultReliability)
+  inline lrt_rcore_event_t subscribe(
+    TypeCategory property,
+    Reliability reliability = DefaultReliability)
   {
-    sendRequestSubscribeUpdate(
-      property, LRT_RCP_MESSAGE_TYPE_SUBSCRIBE, reliability);
     (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                             [static_cast<std::size_t>(property)] = true;
+    return sendRequestSubscribeUpdate(
+      property, LRT_RCP_MESSAGE_TYPE_SUBSCRIBE, reliability);
   }
   template<typename TypeCategory>
-  inline void unsubscribe(TypeCategory property,
-                          Reliability reliability = DefaultReliability)
+  inline lrt_rcore_event_t unsubscribe(
+    TypeCategory property,
+    Reliability reliability = DefaultReliability)
   {
-    sendRequestSubscribeUpdate(
-      property, LRT_RCP_MESSAGE_TYPE_UNSUBSCRIBE, reliability);
     (*m_subscriptionsRemote)[static_cast<std::size_t>(
       rregistry::GetEnumTypeOfEntryClass(property))]
                             [static_cast<std::size_t>(property)] = false;
+    return sendRequestSubscribeUpdate(
+      property, LRT_RCP_MESSAGE_TYPE_UNSUBSCRIBE, reliability);
   }
 
 #define LRT_RCOMM_LITECOMMADAPTER_REQUESTBYTYPEVAL_CASE(CLASS) \

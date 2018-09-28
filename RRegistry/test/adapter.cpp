@@ -60,10 +60,10 @@ class Adapter : public rregistry::Registry::Adapter
   }
   virtual ~Adapter() {}
 
-  virtual void send(lrt_rcore_transmit_buffer_entry_t* entry,
-                    rcomm::Reliability = rcomm::DefaultReliability)
+  virtual lrt_rcore_event_t send(lrt_rcore_transmit_buffer_entry_t* entry,
+                                 rcomm::Reliability = rcomm::DefaultReliability)
   {
-    rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
+    return rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
   }
 
   void setTarget(Adapter* target) { m_target = target; }

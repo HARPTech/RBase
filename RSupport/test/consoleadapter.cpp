@@ -24,17 +24,21 @@ TEST_CASE("rsupport::ConsoleAdapter transmissions working.",
 
   // Pipe data between adapters.
   adapter1->setMode(ConsoleAdapter::CALLBACK);
-  adapter1->addCallback([&](std::string line) { adapter2->parseLine(line); });
+  adapter1->addCallback([&](std::string line) {
+    REQUIRE(adapter2->parseLine(line) == LRT_RCORE_OK);
+  });
   adapter2->setMode(ConsoleAdapter::CALLBACK);
-  adapter2->addCallback([&](std::string line) { adapter1->parseLine(line); });
+  adapter2->addCallback([&](std::string line) {
+    REQUIRE(adapter1->parseLine(line) == LRT_RCORE_OK);
+  });
 
   const int16_t compare = 10;
 
-  adapter2->subscribe(Int16::MVMT_FORWARD_VELOCITY);
-  adapter2->subscribe(Int16::MVMT_MOTOR_PWM_FL);
+  REQUIRE(adapter2->subscribe(Int16::MVMT_FORWARD_VELOCITY) == LRT_RCORE_OK);
+  REQUIRE(adapter2->subscribe(Int16::MVMT_MOTOR_PWM_FL) == LRT_RCORE_OK);
 
-  adapter1->set(Int16::MVMT_FORWARD_VELOCITY, compare);
-  adapter1->set(Int16::MVMT_MOTOR_PWM_FL, compare);
+  REQUIRE(adapter1->set(Int16::MVMT_FORWARD_VELOCITY, compare) == LRT_RCORE_OK);
+  REQUIRE(adapter1->set(Int16::MVMT_MOTOR_PWM_FL, compare) == LRT_RCORE_OK);
 
   REQUIRE(registry2->get(Int16::MVMT_FORWARD_VELOCITY) == compare);
   REQUIRE(registry2->get(Int16::MVMT_MOTOR_PWM_FL) == compare);
@@ -43,7 +47,11 @@ TEST_CASE("rsupport::ConsoleAdapter transmissions working.",
   registry2->set(Int16::MVMT_MOTOR_PWM_FL, 200);
   REQUIRE(registry1->get(Int16::MVMT_MOTOR_PWM_FL) == 0);
 
-  adapter1->subscribe(Int16::MVMT_MOTOR_PWM_FL);
-  registry2->set(Int16::MVMT_MOTOR_PWM_FL, 200);
+  REQUIRE(adapter1->subscribe(Int16::MVMT_MOTOR_PWM_FL) == LRT_RCORE_OK);
+
+  REQUIRE(adapter2->set(Int16::MVMT_MOTOR_PWM_FL, 200) == LRT_RCORE_OK);
   REQUIRE(registry1->get(Int16::MVMT_MOTOR_PWM_FL) == 200);
+
+  registry2->set(Int16::MVMT_MOTOR_PWM_FL, 100);
+  REQUIRE(registry1->get(Int16::MVMT_MOTOR_PWM_FL) == 100);
 }

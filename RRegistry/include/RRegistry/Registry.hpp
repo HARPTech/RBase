@@ -253,7 +253,7 @@ LRT_RREGISTRY_CPPTYPELIST_HELPER_INCLUDE_STRING(
 namespace rcomm {
 template<>
 template<>
-inline void
+inline lrt_rcore_event_t
 LiteCommAdapter<rregistry::Registry>::set(
   rregistry::String property,
   typename rregistry::GetValueTypeOfEntryClass<rregistry::String>::type value,
@@ -261,6 +261,7 @@ LiteCommAdapter<rregistry::Registry>::set(
 {
   // TODO Implement string transmissions.
   assert(false);
+  return LRT_RCORE_OK;
 }
 }
 }

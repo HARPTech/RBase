@@ -55,8 +55,8 @@ class StackAdapter : public rregistry::Registry::Adapter
   }
   virtual ~StackAdapter() {}
 
-  virtual void send(lrt_rcore_transmit_buffer_entry_t* entry,
-                    rcomm::Reliability = rcomm::DefaultReliability)
+  virtual lrt_rcore_event_t send(lrt_rcore_transmit_buffer_entry_t* entry,
+                                 rcomm::Reliability = rcomm::DefaultReliability)
   {
     if(entry->type == static_cast<uint8_t>(rregistry::Type::Int16)) {
       if(entry->property ==
@@ -68,7 +68,7 @@ class StackAdapter : public rregistry::Registry::Adapter
         entry->seq_number = m_seq_num_steering++;
       }
     }
-    rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
+    return rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
   }
 
   uint16_t m_seq_num_forward = 255;

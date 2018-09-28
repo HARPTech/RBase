@@ -36,25 +36,26 @@ SocketClientAdapter::SocketClientAdapter(
                           return LRT_RCORE_OK;
                         },
                         this);
-  rcomm_set_accept_cb(
-    m_rcomm_handle.get(),
-    [](lrt_rbp_message_t* message, void* userdata) {
-      SocketClientAdapter* adapter =
-        static_cast<SocketClientAdapter*>(userdata);
+  rcomm_set_accept_cb(m_rcomm_handle.get(),
+                      [](lrt_rbp_message_t* message, void* userdata) {
+                        SocketClientAdapter* adapter =
+                          static_cast<SocketClientAdapter*>(userdata);
 
-      rcomm_transfer_message_to_tb(
-        adapter->m_rcomm_handle.get(), message, adapter->m_transmit_buffer.get());
+                        rcomm_transfer_message_to_tb(
+                          adapter->m_rcomm_handle.get(),
+                          message,
+                          adapter->m_transmit_buffer.get());
 
-      return LRT_RCORE_OK;
-    },
-    this);
+                        return LRT_RCORE_OK;
+                      },
+                      this);
 }
 SocketClientAdapter::~SocketClientAdapter() {}
-void
+lrt_rcore_event_t
 SocketClientAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
                           rcomm::Reliability reliability)
 {
-  rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
+  return rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
 }
 
 RSupportStatus

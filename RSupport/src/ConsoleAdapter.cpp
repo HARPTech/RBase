@@ -73,45 +73,44 @@ ConsoleAdapter::ConsoleAdapter(std::shared_ptr<rregistry::Registry> registry,
     [](lrt_rbp_message_t* message, void* userdata) {
       ConsoleAdapter* adapter = static_cast<ConsoleAdapter*>(userdata);
 
-      rcomm_transfer_message_to_tb(adapter->m_rcomm_handle.get(),
-                                   message,
-                                   adapter->m_transmit_buffer.get());
-
-      return LRT_RCORE_OK;
+      return rcomm_transfer_message_to_tb(adapter->m_rcomm_handle.get(),
+                                          message,
+                                          adapter->m_transmit_buffer.get());
     },
     this);
 }
 ConsoleAdapter::~ConsoleAdapter() {}
 
-void
+lrt_rcore_event_t
 ConsoleAdapter::send(lrt_rcore_transmit_buffer_entry_t* entry,
                      rcomm::Reliability reliability)
 {
-  rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
+  return rcomm_send_tb_entry(m_rcomm_handle.get(), entry);
 }
-void
+lrt_rcore_event_t
 ConsoleAdapter::read()
 {
   if(m_readTimeout < 10) {
     m_readTimeout++;
-    return;
+    return LRT_RCORE_OK;
   }
   std::string line;
   std::getline(cin, line);
-  parseLine(line);
+  return parseLine(line);
 }
-void
+lrt_rcore_event_t
 ConsoleAdapter::parseLine(std::string line)
 {
   if(line.length() > 2) {
     if(line[0] == '!' && line[1] == ':') {
       line.erase(0, 2);
-      parseBase64(line);
+      return parseBase64(line);
     }
   }
+  return LRT_RCORE_OK;
 }
 
-void
+lrt_rcore_event_t
 ConsoleAdapter::parseBase64(std::string base64)
 {
   using namespace boost::archive::iterators;
@@ -125,7 +124,7 @@ ConsoleAdapter::parseBase64(std::string base64)
     std::string binaryStr =
       std::string(binaryIt(base64.begin()), binaryIt(base64.end()));
 
-    rcomm_parse_bytes(m_rcomm_handle.get(),
+    return rcomm_parse_bytes(m_rcomm_handle.get(),
                       reinterpret_cast<const uint8_t*>(binaryStr.data()),
                       binaryStr.length());
 
@@ -133,6 +132,8 @@ ConsoleAdapter::parseBase64(std::string base64)
     clog << "Invalid base64: \"" << base64 << "\"" << endl
          << "Error: " << e.what() << endl;
   }
+
+  return LRT_RCORE_GENERIC_ACCEPTOR_ERROR;
 }
 }
 }

@@ -19,8 +19,7 @@ class SocketClientAdapter : public rregistry::Registry::Adapter
                       bool subscribedToAll = false);
   virtual ~SocketClientAdapter();
 
-  virtual void send(
-
+  virtual lrt_rcore_event_t send(
     lrt_rcore_transmit_buffer_entry_t* entry,
     rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 

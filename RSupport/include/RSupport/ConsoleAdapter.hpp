@@ -25,7 +25,7 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
                  bool subscribedToAll = false);
   virtual ~ConsoleAdapter();
 
-  virtual void send(
+  virtual lrt_rcore_event_t send(
     lrt_rcore_transmit_buffer_entry_t* entry,
     rcomm::Reliability reliability = rcomm::DefaultReliability) override;
 
@@ -33,9 +33,9 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
 
   void setMode(Mode mode) { m_mode = mode; }
 
-  void read();
-  void parseLine(std::string line);
-  void parseBase64(std::string base64);
+  lrt_rcore_event_t read();
+  lrt_rcore_event_t parseLine(std::string line);
+  lrt_rcore_event_t parseBase64(std::string base64);
 
   private:
   std::vector<WriteCallback> m_callbacks;
