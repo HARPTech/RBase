@@ -27,6 +27,8 @@ target_compile_definitions(rregistrys
 # Needed because of cross references to the communication protocols with the adapter class.
 target_link_libraries(rregistry rcomm)
 target_link_libraries(rregistrys rcomm)
+target_link_libraries(rregistry rutil)
+target_link_libraries(rregistrys rutils)
 
 target_include_directories(rregistry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(rregistrys PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

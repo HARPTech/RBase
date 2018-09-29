@@ -35,11 +35,31 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set (CMAKE_CXX_FLAGS "-std=gnu++14 ${CMAKE_CXX_FLAGS}")
 endif ()
 
+set(Boost_USE_STATIC ON)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+
+if(NOT Boost_FOUND)
+		find_package(Boost COMPONENTS log_setup log REQUIRED)
+endif()
+
 add_subdirectory(RCore)
 
+add_subdirectory(RUtil)
 add_subdirectory(RComm)
 add_subdirectory(RRegistry)
 add_subdirectory(RSupport)
+
+include(basename_setter)
+
+define_file_basename_for_sources(rutil)
+define_file_basename_for_sources(rutils)
+define_file_basename_for_sources(rcomm)
+define_file_basename_for_sources(rregistry)
+define_file_basename_for_sources(rregistrys)
+define_file_basename_for_sources(rsupport)
+define_file_basename_for_sources(rsupports)
 
 if(BUILD_SWIG)
 		add_subdirectory(swig)

@@ -18,6 +18,8 @@ target_link_libraries(rsupport rcomm)
 target_link_libraries(rsupports rcomm)
 target_link_libraries(rsupport rregistry)
 target_link_libraries(rsupports rregistrys)
+target_link_libraries(rsupport rutil)
+target_link_libraries(rsupports rutils)
 
 if(BOOST_LIBRARYDIR)
 		target_link_libraries(rsupport libboost_serialization.so)
