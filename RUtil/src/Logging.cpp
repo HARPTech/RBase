@@ -80,15 +80,14 @@ Logging::init(const std::string& logDir, bool fileOut, bool consoleOut)
   logging::add_common_attributes();
 
   if(m_fileOut) {
-    logging::add_file_log(
-      m_mainLogPath,
-      keywords::format =
-        (expr::stream
-         << "[" << lrt_logger_timestamp << "] "
-         << "[" << lrt_logger_severity
-         << "] "
-         << "(" << lrt_logger_file << ":" << lrt_logger_line << ") "
-         << "(" << lrt_logger_function << "): " << expr::smessage));
+    logging::add_file_log(m_mainLogPath,
+                          keywords::format =
+                            (expr::stream << "[" << lrt_logger_timestamp << "] "
+                                          << "[" << lrt_logger_severity << "] "
+                                          << "(" << lrt_logger_file << ":"
+                                          << lrt_logger_line << ") "
+                                          << "(" << lrt_logger_function
+                                          << "): " << expr::smessage));
   }
 
   if(m_consoleOut) {
@@ -122,18 +121,29 @@ operator<<(
   boost::log::formatting_ostream& strm,
   boost::log::to_log_manip<Logging::Severity, severity_tag> const& manip)
 {
-  static const char* strings[] = { "\033[30mTRCE\033[0m",
-                                   "\033[32mDEBG\033[0m",
-                                   "\033[37mINFO\033[0m",
-                                   "\033[33mWARN\033[0m",
-                                   "\033[33mALRT\033[0m",
-                                   "\033[31mERRR\033[0m",
-                                   "\033[31mFAIL\033[0m",
-                                   "\033[31mFTAL\033[0m" };
+  static const char* colorised_strings[] = {
+    "\033[30mTRCE\033[0m", "\033[32mDEBG\033[0m", "\033[37mINFO\033[0m",
+    "\033[33mWARN\033[0m", "\033[33mALRT\033[0m", "\033[31mERRR\033[0m",
+    "\033[31mFAIL\033[0m", "\033[31mFTAL\033[0m"
+  };
+  static const char* uncolorised_strings[] = { "TRCE", "DEBG", "INFO", "WARN",
+                                               "ALRT", "ERRR", "FAIL", "FTAL" };
+
+  static const char** strings = nullptr;
+
+  if(strings == nullptr) {
+    std::string term = std::getenv("TERM");
+    if(term.find("color") != std::string::npos) {
+      strings = colorised_strings;
+    } else {
+      strings = uncolorised_strings;
+    }
+  }
 
   Logging::Severity level = manip.get();
 
-  if(static_cast<std::size_t>(level) < sizeof(strings) / sizeof(*strings))
+  if(static_cast<std::size_t>(level) <
+     sizeof(colorised_strings) / sizeof(*colorised_strings))
     strm << strings[level];
   else
     strm << static_cast<int>(level);
