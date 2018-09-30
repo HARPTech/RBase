@@ -37,6 +37,14 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
   lrt_rcore_event_t parseLine(std::string line);
   lrt_rcore_event_t parseBase64(std::string base64);
 
+  std::string extractBinaryStreamFromLine(std::string line);
+  std::string binaryStreamToBitRepresentation(std::string binary);
+
+  inline size_t calculateCorrectDataLength(size_t length)
+  {
+    return (length / 8) * 8;
+  }
+
   private:
   std::vector<WriteCallback> m_callbacks;
   Mode m_mode = STDOUT;

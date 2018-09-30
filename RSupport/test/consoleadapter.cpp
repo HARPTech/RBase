@@ -25,10 +25,16 @@ TEST_CASE("rsupport::ConsoleAdapter transmissions working.",
   // Pipe data between adapters.
   adapter1->setMode(ConsoleAdapter::CALLBACK);
   adapter1->addCallback([&](std::string line) {
+    INFO("Transferring from Adapter1 to Adapter2: "
+         << adapter2->binaryStreamToBitRepresentation(
+              adapter2->extractBinaryStreamFromLine(line)));
     REQUIRE(adapter2->parseLine(line) == LRT_RCORE_OK);
   });
   adapter2->setMode(ConsoleAdapter::CALLBACK);
   adapter2->addCallback([&](std::string line) {
+    INFO("Transferring from Adapter2 to Adapter1: "
+         << adapter2->binaryStreamToBitRepresentation(
+              adapter2->extractBinaryStreamFromLine(line)));
     REQUIRE(adapter1->parseLine(line) == LRT_RCORE_OK);
   });
 
@@ -36,6 +42,9 @@ TEST_CASE("rsupport::ConsoleAdapter transmissions working.",
 
   REQUIRE(adapter2->subscribe(Int16::MVMT_FORWARD_VELOCITY) == LRT_RCORE_OK);
   REQUIRE(adapter2->subscribe(Int16::MVMT_MOTOR_PWM_FL) == LRT_RCORE_OK);
+
+  REQUIRE(adapter1->isSubscribed(Int16::MVMT_FORWARD_VELOCITY));
+  REQUIRE(adapter1->isSubscribed(Int16::MVMT_MOTOR_PWM_FL));
 
   REQUIRE(adapter1->set(Int16::MVMT_FORWARD_VELOCITY, compare) == LRT_RCORE_OK);
   REQUIRE(adapter1->set(Int16::MVMT_MOTOR_PWM_FL, compare) == LRT_RCORE_OK);

@@ -101,7 +101,9 @@ Logging::init(const std::string& logDir, bool fileOut, bool consoleOut)
     logging::core::get()->add_sink(consoleSink);
   }
 
-  LRT_MAIN_LOG(Debug) << "Initialized Logging.";
+  if(m_consoleOut) {
+    LRT_MAIN_LOG(Debug) << "Initialized Logging.";
+  }
 }
 
 std::ostream&

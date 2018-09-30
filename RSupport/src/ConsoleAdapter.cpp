@@ -2,9 +2,11 @@
 #include <RCore/transmit_buffer.h>
 #include <RRegistry/Detail.hpp>
 #include <algorithm>
+#include <bitset>
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <sstream>
 
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
@@ -98,6 +100,38 @@ ConsoleAdapter::read()
   std::getline(cin, line);
   return parseLine(line);
 }
+
+using namespace boost::archive::iterators;
+typedef transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>
+  binaryIt;
+
+std::string
+ConsoleAdapter::extractBinaryStreamFromLine(std::string line)
+{
+  if(line.length() > 2) {
+    if(line[0] == '!' && line[1] == ':') {
+      line.erase(0, 2);
+      line = line.substr(0, line.find('\n'));
+      std::replace(line.begin(), line.end(), '=', 'A');
+
+      std::string binaryStr =
+        std::string(binaryIt(line.begin()), binaryIt(line.end()));
+
+      return binaryStr;
+    }
+  }
+  return "";
+}
+std::string
+ConsoleAdapter::binaryStreamToBitRepresentation(std::string binary)
+{
+  std::stringstream out;
+  for(size_t i = 0; i < calculateCorrectDataLength(binary.length()); ++i) {
+    std::bitset<8> bits(binary[i]);
+    out << bits << " ";
+  }
+  return out.str();
+}
 lrt_rcore_event_t
 ConsoleAdapter::parseLine(std::string line)
 {
@@ -113,10 +147,6 @@ ConsoleAdapter::parseLine(std::string line)
 lrt_rcore_event_t
 ConsoleAdapter::parseBase64(std::string base64)
 {
-  using namespace boost::archive::iterators;
-  typedef transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>
-    binaryIt;
-
   try {
     base64 = base64.substr(0, base64.find('\n'));
     std::replace(base64.begin(), base64.end(), '=', 'A');
@@ -125,8 +155,8 @@ ConsoleAdapter::parseBase64(std::string base64)
       std::string(binaryIt(base64.begin()), binaryIt(base64.end()));
 
     return rcomm_parse_bytes(m_rcomm_handle.get(),
-                      reinterpret_cast<const uint8_t*>(binaryStr.data()),
-                      binaryStr.length());
+                             reinterpret_cast<const uint8_t*>(binaryStr.data()),
+                             calculateCorrectDataLength(binaryStr.length()));
 
   } catch(dataflow_exception& e) {
     clog << "Invalid base64: \"" << base64 << "\"" << endl

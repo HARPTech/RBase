@@ -41,7 +41,9 @@ if(${SQLITE3_FOUND})
     target_link_libraries(rregistrys ${SQLITE3_LIBRARIES})
 endif()
 
-add_subdirectory(test)
+if(BUILD_TESTS)
+		add_subdirectory(test)
+endif()
 
 if(INSTALL_RBASE)
 		include(GNUInstallDirs)

@@ -14,8 +14,6 @@ using std::endl;
 using namespace lrt;
 using namespace lrt::rregistry;
 
-const int checkValue = 100;
-
 class StackAdapter : public rregistry::Registry::Adapter
 {
   public:
@@ -34,7 +32,7 @@ class StackAdapter : public rregistry::Registry::Adapter
       [](const uint8_t* data, void* userdata, size_t bytes) {
         StackAdapter* adapter = static_cast<StackAdapter*>(userdata);
         auto entry = std::make_unique<StackEntry>();
-        std::copy(data, data + bytes - 1, entry->data.begin());
+        std::copy(data, data + bytes, entry->data.begin());
         entry->bytes = bytes;
         adapter->m_stack.push(std::move(entry));
         return LRT_RCORE_OK;
@@ -45,11 +43,9 @@ class StackAdapter : public rregistry::Registry::Adapter
       [](lrt_rbp_message_t* message, void* userdata) {
         StackAdapter* adapter = static_cast<StackAdapter*>(userdata);
 
-        rcomm_transfer_message_to_tb(adapter->m_rcomm_handle.get(),
-                                     message,
-                                     adapter->m_transmit_buffer.get());
-
-        return LRT_RCORE_OK;
+        return rcomm_transfer_message_to_tb(adapter->m_rcomm_handle.get(),
+                                            message,
+                                            adapter->m_transmit_buffer.get());
       },
       (void*)this);
   }
@@ -81,8 +77,9 @@ class StackAdapter : public rregistry::Registry::Adapter
       m_stack.pop();
 
       if(m_target) {
-        rcomm_parse_bytes(
-          m_target->m_rcomm_handle.get(), entry->data.data(), entry->bytes);
+        REQUIRE(rcomm_parse_bytes(m_target->m_rcomm_handle.get(),
+                                  entry->data.data(),
+                                  entry->bytes) == LRT_RCORE_OK);
       }
     }
   }
@@ -98,14 +95,30 @@ class StackAdapter : public rregistry::Registry::Adapter
 void
 sendPackets(StackAdapter& adapter, rcomm::Reliability reliability)
 {
-  adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY, 20, reliability);
-  adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY, 10, reliability);
-  adapter.set(rregistry::Int16::MVMT_STEER_DIRECTION, 20, reliability);
-  adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY, 30, reliability);
-  adapter.set(rregistry::Int16::MVMT_STEER_DIRECTION, 10, reliability);
-  adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY, 20, reliability);
-  adapter.set(rregistry::Int16::MVMT_STEER_DIRECTION, 70, reliability);
-  adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY, 30, reliability);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY,
+                      20,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY,
+                      10,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_STEER_DIRECTION,
+                      20,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY,
+                      30,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_STEER_DIRECTION,
+                      10,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY,
+                      20,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_STEER_DIRECTION,
+                      70,
+                      reliability) == LRT_RCORE_OK);
+  REQUIRE(adapter.set(rregistry::Int16::MVMT_FORWARD_VELOCITY,
+                      30,
+                      reliability) == LRT_RCORE_OK);
   adapter.sendStack();
 }
 
