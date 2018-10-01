@@ -2,7 +2,10 @@ project(RSupport
 		VERSION 0.1.0)
 
 add_subdirectory(src)
-add_subdirectory(test)
+
+if(BUILD_TESTS)
+		add_subdirectory(test)
+endif()
 
 add_library(rsupport SHARED ${SRCS})
 add_library(rsupports STATIC ${SRCS})

@@ -18,7 +18,6 @@ set(AdditionalCatchParameters -o report.xml -r junit)
 get_directory_property(hasParent PARENT_DIRECTORY)
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost COMPONENTS serialization)
 
 if(hasParent)
 else()
@@ -40,8 +39,8 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
-if(NOT Boost_FOUND)
-		find_package(Boost COMPONENTS log_setup log REQUIRED)
+if(NOT Boost_FOUND OR NOT Boost_log_FOUND OR NOT Boost_serialization_FOUND)
+		find_package(Boost COMPONENTS log_setup log serialization REQUIRED)
 endif()
 
 add_subdirectory(RCore)
