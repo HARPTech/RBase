@@ -19,6 +19,9 @@ target_link_libraries(rutils Boost::log)
 target_include_directories(rutil PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(rutils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+target_compile_definitions(rutil PUBLIC -DBOOST_LOG_DYN_LINK)
+target_compile_definitions(rutils PUBLIC -DBOOST_LOG_DYN_LINK)
+
 set_property(TARGET rutil PROPERTY CXX_STANDARD 14)
 set_property(TARGET rutils PROPERTY CXX_STANDARD 14)
 
