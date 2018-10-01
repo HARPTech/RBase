@@ -17,8 +17,6 @@ set(AdditionalCatchParameters -o report.xml -r junit)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 
-set(Boost_USE_STATIC_LIBS ON)
-
 if(hasParent)
 else()
 		set(INSTALL_RBASE TRUE)
@@ -34,10 +32,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set (CMAKE_CXX_FLAGS "-std=gnu++14 ${CMAKE_CXX_FLAGS}")
 endif ()
 
-set(Boost_USE_STATIC ON)
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC OFF)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
 
 if(NOT Boost_FOUND OR NOT Boost_log_FOUND OR NOT Boost_serialization_FOUND)
 		find_package(Boost COMPONENTS log_setup log serialization REQUIRED)
