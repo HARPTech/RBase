@@ -38,7 +38,9 @@ bool Logging::m_initialised = false;
 Logging::Logging()
   : m_logDir("")
   , m_mainLogPath("rmaster.log")
-{}
+{
+  std::cerr << "> Logging System Created, not initialised yet." << std::endl;
+}
 Logging::~Logging() {}
 
 boost::log::sources::severity_logger<Logging::Severity>&
@@ -63,43 +65,72 @@ Logging::setConsoleOut(bool enabled)
 void
 Logging::init(const std::string& logDir, bool fileOut, bool consoleOut)
 {
+  std::cerr << "> Initialising Logging System." << std::endl;
+
   m_logDir = logDir;
   m_mainLogPath = logDir + "/rmaster.log";
   m_fileOut = fileOut;
   m_consoleOut = consoleOut;
-  m_initialised = true;
 
-  logging::core::get()->add_global_attribute(
-    "Line", logging::attributes::mutable_constant<int>(5));
-  logging::core::get()->add_global_attribute(
-    "File", logging::attributes::mutable_constant<std::string>(""));
-  logging::core::get()->add_global_attribute(
-    "Function", logging::attributes::mutable_constant<std::string>(""));
-  logging::core::get()->add_global_attribute(
-    "Timestamp", logging::attributes::local_clock());
-  logging::add_common_attributes();
+  try {
+    logging::core::get()->add_global_attribute(
+      "Line", logging::attributes::mutable_constant<int>(5));
+    logging::core::get()->add_global_attribute(
+      "File", logging::attributes::mutable_constant<std::string>(""));
+    logging::core::get()->add_global_attribute(
+      "Function", logging::attributes::mutable_constant<std::string>(""));
+    logging::core::get()->add_global_attribute(
+      "Timestamp", logging::attributes::local_clock());
+    logging::add_common_attributes();
+
+    std::cerr << "> Global Log Attributes Initialised" << std::endl;
+  } catch(const std::exception& e) {
+    std::cerr
+      << "Exception during initialisation of global log variables! Error: "
+      << e.what() << std::endl;
+    BOOST_THROW_EXCEPTION(e);
+  }
 
   if(m_fileOut) {
-    logging::add_file_log(m_mainLogPath,
-                          keywords::format =
-                            (expr::stream << "[" << lrt_logger_timestamp << "] "
-                                          << "[" << lrt_logger_severity << "] "
-                                          << "(" << lrt_logger_file << ":"
-                                          << lrt_logger_line << ") "
-                                          << "(" << lrt_logger_function
-                                          << "): " << expr::smessage));
+    try {
+      logging::add_file_log(
+        m_mainLogPath,
+        keywords::format = (expr::stream << "[" << lrt_logger_timestamp << "] "
+                                         << "[" << lrt_logger_severity << "] "
+                                         << "(" << lrt_logger_file << ":"
+                                         << lrt_logger_line << ") "
+                                         << "(" << lrt_logger_function
+                                         << "): " << expr::smessage));
+      std::cerr << "> File Log Initialised" << std::endl;
+    } catch(const std::exception& e) {
+      std::cerr << "Exception during file log creation! Error: " << e.what()
+                << std::endl;
+      BOOST_THROW_EXCEPTION(e);
+    }
   }
 
   if(m_consoleOut) {
-    auto consoleSink = logging::add_console_log(
-      std::clog,
-      keywords::format =
-        (expr::stream << "[" << lrt_logger_timestamp << "] ["
-                      << expr::attr<Logging::Severity, severity_tag>("Severity")
-                      << "] " << expr::smessage));
+    try {
+      auto consoleSink = logging::add_console_log(
+        std::clog,
+        keywords::format =
+          (expr::stream << "[" << lrt_logger_timestamp << "] ["
+                        << expr::attr<Logging::Severity, severity_tag>(
+                             "Severity")
+                        << "] " << expr::smessage));
 
-    logging::core::get()->add_sink(consoleSink);
+      logging::core::get()->add_sink(consoleSink);
+      std::cerr << "> Console Log Initialised" << std::endl;
+    } catch(const std::exception& e) {
+      std::cerr << "Exception during console log creation! Error: " << e.what()
+                << std::endl;
+      BOOST_THROW_EXCEPTION(e);
+    }
   }
+
+  m_initialised = true;
+
+  std::cerr << "> Logging Fully Initialised!" << std::endl;
 
   if(m_consoleOut) {
     LRT_MAIN_LOG(Debug) << "Initialized Logging.";
@@ -131,20 +162,20 @@ operator<<(
   static const char* uncolorised_strings[] = { "TRCE", "DEBG", "INFO", "WARN",
                                                "ALRT", "ERRR", "FAIL", "FTAL" };
 
-  static const char** strings = nullptr;
+  static const char** strings = uncolorised_strings;
 
   if(strings == nullptr) {
-    const char* term = std::getenv("TERM");
+    const char* terminal = std::getenv("TERM");
 
-    if(term != nullptr) {
-      std::string term = std::string(term);
-      if(term.find("color") != std::string::npos) {
+    if(terminal == NULL) {
+      strings = uncolorised_strings;
+    } else {
+      if(std::strlen(terminal) > 7) {
         strings = colorised_strings;
-      } else {
+      }
+      else {
         strings = uncolorised_strings;
       }
-    } else {
-      strings = uncolorised_strings;
     }
   }
 
