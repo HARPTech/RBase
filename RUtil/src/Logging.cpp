@@ -134,9 +134,15 @@ operator<<(
   static const char** strings = nullptr;
 
   if(strings == nullptr) {
-    std::string term = std::getenv("TERM");
-    if(term.find("color") != std::string::npos) {
-      strings = colorised_strings;
+    const char* term = std::getenv("TERM");
+
+    if(term != nullptr) {
+      std::string term = std::string(term);
+      if(term.find("color") != std::string::npos) {
+        strings = colorised_strings;
+      } else {
+        strings = uncolorised_strings;
+      }
     } else {
       strings = uncolorised_strings;
     }
