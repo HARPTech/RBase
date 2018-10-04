@@ -1,6 +1,3 @@
-[submodule "capnproto"]
-	path = capnproto
-	url = https://github.com/capnproto/capnproto.git
 [submodule "RCore"]
 	path = RCore
 	url = ../RCore.git
