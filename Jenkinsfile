@@ -6,37 +6,36 @@ pipeline {
     }
 
     stages {
-        stage('Docker Setup') {
-            steps {
-                sh """ docker build -t rbase-arm64 . """
-								sh """ docker run --rm rbase-arm64 > ./rbase-arm64 """
-								sh """ chmod +x ./rbase-arm64 """
-            }
-        }
 				stage('Configure') {
 				    steps {
-                sh """ ./rbase-arm64 cmake -Bbuild -H. -G'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
+                sh """ cmake -BbuildArm64 -H. -G'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER -DCMAKE_TOOLCHAIN_FILE=RCore/AArch64Toolchain.cmake """
+                sh """ chmod +x ./buildArm64/build-cli.sh """
+
+                sh """ cmake -Bbuild -H. -G'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
+                sh """ chmod +x ./buildArm64/build-cli.sh """
             }
         }
 				stage('Build') {
 				    steps {
-                sh """ ./rbase-arm64 make -C build -j 2 """
+                sh """ ./buildArm64/build-cli.sh make -C buildArm64 -j 2 """
+                sh """ make -C build -j 2 """
             }
         }
 				stage('Test') {
             steps {
-						    sh """ ./rbase-arm64 make -C build test ARGS="-T Test" """
+						    sh """ ./build/test-runner -r junit > ./build/junit.xml """
+                junit './build/junit.xml'
 						}
         }
 				stage('Package') {
 				    steps {
-                sh """ ./rbase-arm64 make -C build package -j 2 """
+                sh """ ./buildArm64/build-cli.sh make -C buildArm64 package """
             }
         }
 				stage('Publish') {
             steps {
-                sh """ aptly repo add harptech-testing ./packages/*.deb """
-								sh """ aptly publish update jessie testing """
+                sh """ aptly repo add harptech-testing ./buildArm64/packages/*.deb """
+								sh """ aptly publish update xenial """
             }
         }
     }
