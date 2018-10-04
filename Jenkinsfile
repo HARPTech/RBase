@@ -17,6 +17,7 @@ pipeline {
         }
 				stage('Build') {
 				    steps {
+                sh """ touch RCore/AArch64Toolchain.cmake """
                 sh """ ./buildArm64/build-cli.sh make -C buildArm64 -j 2 """
                 sh """ make -C build -j 2 """
             }
