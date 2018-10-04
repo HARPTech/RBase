@@ -25,7 +25,6 @@ pipeline {
 				stage('Test') {
             steps {
 						    sh """ ./build/test-runner -r junit -o ./build/junit.xml """
-                junit './build/junit.xml'
 						}
         }
 				stage('Package') {
@@ -38,6 +37,12 @@ pipeline {
                 sh """ aptly repo add harptech-testing ./buildArm64/packages/*.deb """
 								sh """ aptly publish update xenial """
             }
+        }
+	  }
+
+    post {
+        always {
+            junit './build/junit.xml'
         }
     }
 }
