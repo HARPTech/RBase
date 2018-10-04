@@ -24,7 +24,7 @@ pipeline {
         }
 				stage('Test') {
             steps {
-						    sh """ ./build/test-runner -r junit > ./build/junit.xml """
+						    sh """ ./build/test-runner -r junit -o ./build/junit.xml """
                 junit './build/junit.xml'
 						}
         }
