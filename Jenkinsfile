@@ -8,10 +8,10 @@ pipeline {
     stages {
 				stage('Configure') {
 				    steps {
-                sh """ cmake -BbuildArm64 -H. -G'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER -DCMAKE_TOOLCHAIN_FILE=RCore/AArch64Toolchain.cmake """
+                sh """ cmake -BbuildArm64 -H. -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER -DCMAKE_TOOLCHAIN_FILE=RCore/AArch64Toolchain.cmake """
                 sh """ chmod +x ./buildArm64/build-cli.sh """
 
-                sh """ cmake -Bbuild -H. -G'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
+                sh """ cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Release -Dtesting=ON -DBUILD_NUMBER=$BUILD_NUMBER """
                 sh """ chmod +x ./buildArm64/build-cli.sh """
             }
         }
