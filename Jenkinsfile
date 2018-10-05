@@ -43,6 +43,7 @@ pipeline {
 
     post {
         always {
+						archiveArtifacts artifacts: 'buildArm64/packages/*.deb', fingerprint: true
             junit 'build/junit.xml'
         }
     }
