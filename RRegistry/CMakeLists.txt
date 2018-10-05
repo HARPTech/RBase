@@ -24,9 +24,14 @@ target_compile_definitions(rregistrys
     INTERFACE LIBRARY_HEADER_ONLY
 )
 
+
+if(NOT Threads_FOUND)
+    find_package (Threads)
+endif()
+
 # Needed because of cross references to the communication protocols with the adapter class.
-target_link_libraries(rregistry rcomm)
-target_link_libraries(rregistrys rcomm)
+target_link_libraries(rregistry rcomm Threads::Threads)
+target_link_libraries(rregistrys rcomm Threads::Threads)
 target_link_libraries(rregistry rutil)
 target_link_libraries(rregistrys rutils)
 
