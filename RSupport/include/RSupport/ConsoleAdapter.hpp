@@ -42,7 +42,7 @@ class ConsoleAdapter : public rregistry::Registry::Adapter
 
   inline size_t calculateCorrectDataLength(size_t length)
   {
-    return (length / 8) * 8;
+    return (length / 8) * 8 + 1;
   }
 
   private:
