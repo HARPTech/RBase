@@ -74,3 +74,4 @@ logs/
 CMakeFiles/
 Makefile
 cmake_install.cmake
+buildArm
