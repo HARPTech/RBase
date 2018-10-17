@@ -378,6 +378,12 @@ LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint8) = {
     20,
     1,
     50 },
+  { "SENS_LIGHT_1",
+    "Light sensor 1 reading.",
+    "",
+    0,
+    0,
+    255 },
 };
 LRT_RREGISTRY_ENTRYDETAIL_ARR(Uint16) = {
   { "EEC_MOTORCURRENT_TO_SHUNTVOLTAGE_CALIBRATION_FL",
