@@ -79,6 +79,8 @@ enum class Uint8
 
   MVMT_SERVO_MAX_DELTA = 13,
   MVMT_SERVO_MAX_VELOCITY = 14,
+
+  SENS_LIGHT_1 = 15,
   _COUNT
 };
 enum class Uint16
