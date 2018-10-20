@@ -128,6 +128,7 @@ class Registry
     return get(static_cast<TypeCategory>(intProperty));
   }
 
+#ifndef SWIG
   void registerAdapter(AdapterPtr adapter) { m_adapters.push_back(adapter); }
   void removeAdapter(std::shared_ptr<Adapter> adapter)
   {
@@ -151,6 +152,7 @@ class Registry
         }
       });
   }
+#endif
 
   void addReceiver(ReceiverPtr receiver) { m_receivers.push_back(receiver); }
   void removeReceiver(ReceiverPtr receiver)
@@ -158,7 +160,9 @@ class Registry
     std::remove(m_receivers.begin(), m_receivers.end(), receiver);
   }
 
+#ifndef SWIG
   const std::vector<AdapterPtr>& adapters() { return m_adapters; }
+#endif
   const std::vector<ReceiverPtr>& receivers() { return m_receivers; }
 
   void setPersistencyPolicy(PersistencyPolicyPtr&& persistencyPolicy)
