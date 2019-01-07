@@ -3,7 +3,7 @@ project(RUtil
 
 add_subdirectory(src)
 
-add_library(rutil SHARED ${SRCS})
+add_library(rutil STATIC ${SRCS})
 add_library(rutils STATIC ${SRCS})
 
 set_target_properties(rutil PROPERTIES
