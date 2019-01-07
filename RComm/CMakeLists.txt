@@ -6,7 +6,6 @@ project(RComm
 add_library(rcomm STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/RComm.cpp)
 
 target_link_libraries(rcomm rcore)
-target_link_libraries(rcomm rutil)
 
 if(INSTALL_RBASE)
 		install(TARGETS rcomm
