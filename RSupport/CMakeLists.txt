@@ -40,7 +40,7 @@ target_include_directories(rsupports PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_property(TARGET rsupport PROPERTY CXX_STANDARD 14)
 set_property(TARGET rsupports PROPERTY CXX_STANDARD 14)
 
-set_property(TARGET rsupport PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET rsupports PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(INSTALL_RBASE)
 		include(GNUInstallDirs)
